@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TP - Project Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tp-deep-purple:#4A4C6A; --tp-dark-purple:#3A3C5A; --tp-rich-purple:#4C3193;
+  --tp-white:#FFFFFF; --tp-off-white:#F5F5F5; --tp-warm-gray:#D4D1CA;
+  --tp-magenta:#ED1E81; --tp-magenta-hover:#d11a73; --tp-muted-purple:#706297;
+  --tp-blue-gray:#848DAC; --tp-light-gray:#C2C7CC; --tp-warm-muted:#918D80; --tp-black:#1A1A2E;
+  --st-inprogress-bg:#E8A83A; --st-inprogress-fg:#333333;
+  --st-pending-bg:#EDE7F6;   --st-pending-fg:#6F6197;
+  --st-onhold-bg:#848DAC;    --st-onhold-fg:#FFFFFF;
+  --st-closed-bg:#3AA76D;    --st-closed-fg:#FFFFFF;
+  --st-atrisk-bg:#D64545;    --st-atrisk-fg:#FFFFFF;
+  --st-live-bg:#2E9CB8;      --st-live-fg:#FFFFFF;
+  --st-cancelled-bg:#B8B3A8; --st-cancelled-fg:#3A3C5A;
+  --pr-high-bg:#D64545;      --pr-high-fg:#FFFFFF;
+  --pr-medium-bg:#E8A83A;    --pr-medium-fg:#333333;
+  --pr-low-bg:#E1EFE8;       --pr-low-fg:#2E7D5B;
+  --font-primary:'DM Sans','Calibri','Segoe UI',system-ui,sans-serif;
+  --transition-base:0.3s ease; --transition-fast:0.2s ease;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-primary);font-size:15px;line-height:1.6;color:var(--tp-black);background:var(--tp-off-white);-webkit-font-smoothing:antialiased}
+
+.tp-nav{position:sticky;top:0;z-index:1000;background:var(--tp-deep-purple);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 20px rgba(0,0,0,.15)}
+.tp-nav__left{display:flex;align-items:center;gap:16px}
+.tp-logo-mark{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:#fff;color:var(--tp-deep-purple);font-family:'DM Sans',sans-serif;font-weight:800;font-size:15px;letter-spacing:.5px;flex:none}
+.tp-nav__title{color:#fff;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:2.5px;padding-left:16px;border-left:1px solid rgba(255,255,255,.25)}
+.tp-nav__actions{display:flex;gap:10px;align-items:center}
+.savechip{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-right:6px;transition:color .3s}
+.savechip.on{color:#7ee0a8}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;font-family:var(--font-primary);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;border:none;cursor:pointer;transition:all var(--transition-base);border-radius:0;white-space:nowrap}
+.btn--primary{background:var(--tp-magenta);color:#fff}
+.btn--primary:hover{background:var(--tp-magenta-hover)}
+.btn--ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.55)}
+.btn--ghost:hover{background:rgba(255,255,255,.12);border-color:#fff}
+.btn--sm{padding:7px 12px;font-size:11px}
+
+.header{background:var(--tp-deep-purple);color:#fff;padding:36px 32px 30px;position:relative}
+.header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--tp-magenta),var(--tp-rich-purple))}
+.header__label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:var(--tp-magenta);margin-bottom:10px}
+.header__title{font-size:34px;font-weight:700;line-height:1.1}
+.header__meta{margin-top:10px;font-size:13px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.header__meta [contenteditable]{outline:none;border-bottom:1px dashed rgba(255,255,255,.4);padding:0 2px;min-width:20px;color:#fff}
+.header__meta [contenteditable]:focus{border-bottom-color:var(--tp-magenta)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:26px;max-width:920px}
+.stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:16px 18px;cursor:pointer;transition:all .25s}
+.stat:hover{background:rgba(255,255,255,.12)}
+.stat.active{background:#fff;border-color:#fff}
+.stat.active .stat__num,.stat.active .stat__lbl{color:var(--tp-deep-purple)}
+.stat__num{font-size:38px;font-weight:700;line-height:1;color:#fff}
+.stat__lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.4px;color:rgba(255,255,255,.7);margin-top:8px;display:flex;align-items:center;gap:7px}
+.stat__dot{width:9px;height:9px;border-radius:50%;flex:none}
+
+.distro{margin-top:22px;max-width:920px}
+.distro__track{display:flex;height:12px;width:100%;overflow:hidden;background:rgba(255,255,255,.08)}
+.distro__seg{height:100%;transition:width .4s ease}
+.distro__legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:12px;color:rgba(255,255,255,.8)}
+.distro__legend span{display:inline-flex;align-items:center;gap:6px}
+.distro__legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+.toolbar{background:#fff;border-bottom:1px solid var(--tp-light-gray);padding:16px 32px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;position:sticky;top:113px;z-index:900}
+.search{flex:1;min-width:200px;position:relative}
+.search input{width:100%;padding:10px 14px 10px 38px;border:1.5px solid var(--tp-light-gray);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
+.search input:focus{border-color:var(--tp-rich-purple)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--tp-warm-muted)}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--tp-warm-muted);margin-right:2px}
+select.pfilter{padding:9px 12px;border:1.5px solid var(--tp-light-gray);font-family:inherit;font-size:13px;background:#fff;cursor:pointer;outline:none;max-width:170px}
+select.pfilter:focus{border-color:var(--tp-rich-purple)}
+
+.wrap{padding:24px 32px 60px}
+.tablecard{background:#fff;border:1px solid var(--tp-light-gray);overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1500px}
+thead th{background:var(--tp-deep-purple);color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;text-align:left;padding:14px 12px;position:sticky;top:0;white-space:nowrap}
+tbody td{border-bottom:1px solid #ececf1;padding:10px 12px;vertical-align:top;font-size:13.5px}
+tbody tr:hover{background:#faf9fc}
+tbody tr:last-child td{border-bottom:none}
+td.num{font-weight:700;color:var(--tp-deep-purple);width:44px;text-align:center}
+.cell-edit{outline:none;min-height:20px;border-radius:2px;transition:background .15s;cursor:text}
+.cell-edit:hover{background:#f3f0f9}
+.cell-edit:focus{background:#fff;box-shadow:0 0 0 2px var(--tp-rich-purple) inset}
+.cell-edit:empty::before{content:'-';color:#c9c9d4}
+.col-project{min-width:200px;font-weight:600;color:var(--tp-deep-purple)}
+.col-category{min-width:130px}
+.col-roi{min-width:110px;max-width:160px}
+.col-stage,.col-notes{min-width:210px;max-width:300px}
+.col-remarks{min-width:230px;max-width:320px}
+.col-next{min-width:290px;max-width:360px}
+.col-owner{min-width:120px}
+.col-poc{min-width:120px}
+.col-deadline,.col-created{min-width:96px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.col-created{color:var(--tp-warm-muted);font-size:12.5px}
+.pcode{display:block;font-size:10.5px;font-weight:600;letter-spacing:.6px;color:var(--tp-warm-muted);margin-top:3px}
+.col-link{min-width:180px;max-width:230px}
+.linkcell{display:flex;align-items:center;gap:10px}
+.linkcell .cell-edit{flex:1;min-width:150px}
+.link-input:empty::before{content:'Paste link here…';color:#c9c9d4;font-style:normal}
+.link-a{flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--tp-magenta);text-decoration:underline;text-underline-offset:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.link-a:hover{color:var(--tp-rich-purple)}
+.link-edit{flex:none;background:none;border:none;color:#b9b9c6;cursor:pointer;font-size:12px;line-height:1;padding:3px 4px}
+.link-edit:hover{color:var(--tp-rich-purple)}
+tr.is-cancelled .col-project .cell-edit{text-decoration:line-through;opacity:.55}
+thead th[data-sort]{cursor:pointer;user-select:none;transition:background .15s}
+thead th[data-sort]:hover{background:var(--tp-rich-purple)}
+thead th .arrow{opacity:.35;font-size:9px;margin-left:4px}
+thead th.sorted .arrow{opacity:1;color:var(--tp-magenta)}
+
+/* tabs */
+.tabs{background:#fff;border-bottom:1px solid var(--tp-light-gray);padding:0 32px;display:flex;gap:2px;position:sticky;top:64px;z-index:950;overflow-x:auto}
+.tab{background:none;border:none;font-family:inherit;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--tp-warm-muted);padding:15px 18px;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tab:hover{color:var(--tp-deep-purple)}
+.tab.active{color:var(--tp-rich-purple);border-bottom-color:var(--tp-magenta)}
+.tab__count{background:var(--tp-off-white);color:var(--tp-warm-muted);font-size:10.5px;padding:2px 8px;border-radius:10px;font-weight:700;letter-spacing:0}
+.tab.active .tab__count{background:var(--tp-magenta);color:#fff}
+.panehead{margin:0 0 14px;font-size:13px;color:var(--tp-warm-muted);max-width:900px;line-height:1.55}
+.panehead b{color:var(--tp-deep-purple);text-transform:uppercase;letter-spacing:1.2px;font-size:11.5px;display:block;margin-bottom:4px}
+
+/* pipeline stage badges */
+.sg-Proposed{background:#EDE7F6;color:#6F6197}
+.sg-Discussed{background:#E8A83A;color:#333}
+.sg-Awaiting{background:#848DAC;color:#fff}
+.sg-Approved{background:#3AA76D;color:#fff}
+.sg-Declined{background:#B8B3A8;color:#3A3C5A}
+
+/* log type + status badges */
+.ty-Discussion{background:#EDE7F6;color:#6F6197}
+.ty-Blocker{background:#D64545;color:#fff}
+.ty-Pending{background:#E8A83A;color:#333}
+.ty-Update{background:#2E9CB8;color:#fff}
+.ty-FYI{background:#E4E2DC;color:#5A5647}
+.ns-Open{background:#E8A83A;color:#333}
+.ns-Discussed{background:#EDE7F6;color:#6F6197}
+.ns-Closed{background:#3AA76D;color:#fff}
+tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
+.col-detail{min-width:320px;max-width:460px}
+.rowpromote{background:none;border:none;color:var(--tp-muted-purple);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;font-weight:700}
+.rowpromote:hover{color:var(--tp-magenta)}
+.kd-Discussion{background:#EDE7F6;color:#6F6197}
+.kd-Workshop{background:#4C3193;color:#fff}
+.kd-Decision{background:#ED1E81;color:#fff}
+.kd-Update{background:#2E9CB8;color:#fff}
+.kd-Blocker{background:#D64545;color:#fff}
+.hs-Raise{background:#E8A83A;color:#333}
+.hs-Raised{background:#EDE7F6;color:#6F6197}
+.hs-Parked{background:#B8B3A8;color:#3A3C5A}
+.hs-Done{background:#3AA76D;color:#fff}
+.hud-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 14px}
+.hud-head h2{margin:0;font-size:19px;font-weight:700;letter-spacing:-.3px;color:var(--tp-dark-purple)}
+.hud-date{font-size:13px;color:var(--tp-warm-muted);border-bottom:1px dashed var(--tp-warm-gray);
+  min-width:150px;padding:2px 4px;outline:none}
+.hud-date:focus{border-bottom-color:var(--tp-magenta);color:var(--tp-dark-purple)}
+.hud-date:empty:before{content:'add a date\2026';color:#C2BFB8}
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}
+.sec-head h3{margin:0;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--tp-deep-purple)}
+.plain-select{font-family:inherit;font-size:13.5px;color:var(--tp-dark-purple);background:transparent;
+  border:1px solid transparent;border-radius:3px;padding:4px 6px;width:100%;cursor:pointer}
+.plain-select:hover{border-color:var(--tp-warm-gray)}
+.plain-select:focus{outline:none;border-color:var(--tp-magenta);background:#fff}
+
+.badge-select{border:none;font-family:inherit;font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer;outline:none;text-transform:uppercase;letter-spacing:.5px;-webkit-appearance:none;appearance:none;border-radius:2px;text-align:center}
+.st-InProgress{background:var(--st-inprogress-bg);color:var(--st-inprogress-fg)}
+.st-Pending{background:var(--st-pending-bg);color:var(--st-pending-fg)}
+.st-OnHold{background:var(--st-onhold-bg);color:var(--st-onhold-fg)}
+.st-Closed{background:var(--st-closed-bg);color:var(--st-closed-fg)}
+.st-AtRisk{background:var(--st-atrisk-bg);color:var(--st-atrisk-fg)}
+.st-Live{background:var(--st-live-bg);color:var(--st-live-fg)}
+.st-Cancelled{background:var(--st-cancelled-bg);color:var(--st-cancelled-fg)}
+.st-NoStatus{background:#E4E2DC;color:#5A5647}
+.pr-High{background:var(--pr-high-bg);color:var(--pr-high-fg)}
+.pr-Medium{background:var(--pr-medium-bg);color:var(--pr-medium-fg)}
+.pr-Low{background:var(--pr-low-bg);color:var(--pr-low-fg)}
+
+/* Next Action sub-items */
+.subitems{display:flex;flex-direction:column;gap:7px}
+.subitem{display:flex;align-items:flex-start;gap:6px}
+.sub-status{-webkit-appearance:none;appearance:none;border:none;border-radius:2px;font-family:inherit;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:4px 6px;cursor:pointer;outline:none;flex:none;width:82px;text-align:center}
+.subst-ToDo{background:#EDE7F6;color:#6F6197}
+.subst-InProgress{background:#E8A83A;color:#333}
+.subst-Done{background:#3AA76D;color:#fff}
+.subst-Blocked{background:#D64545;color:#fff}
+.rm-Problem{background:#D64545;color:#fff}
+.rm-Review{background:var(--tp-rich-purple);color:#fff}
+.rm-Final{background:#3AA76D;color:#fff}
+.remark-select{width:104px}
+.sub-text{flex:1;min-width:80px;font-size:13px;line-height:1.45}
+.subitem.done .sub-text{text-decoration:line-through;opacity:.5}
+.sub-del{background:none;border:none;color:#cfcfd8;cursor:pointer;font-size:15px;line-height:1;padding:2px 3px;flex:none}
+.sub-del:hover{color:var(--tp-magenta)}
+.sub-add{align-self:flex-start;background:none;border:1px dashed var(--tp-light-gray);color:var(--tp-muted-purple);font-family:inherit;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:4px 8px;cursor:pointer;margin-top:1px}
+.sub-add:hover{border-color:var(--tp-rich-purple);color:var(--tp-rich-purple)}
+.rem-del{background:none;border:none;color:#cfcfd8;cursor:pointer;font-size:15px;line-height:1;padding:2px 3px;flex:none}
+.rem-del:hover{color:var(--tp-magenta)}
+.rem-add{align-self:flex-start;background:none;border:1px dashed var(--tp-light-gray);color:var(--tp-muted-purple);font-family:inherit;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:4px 8px;cursor:pointer;margin-top:1px}
+.rem-add:hover{border-color:var(--tp-rich-purple);color:var(--tp-rich-purple)}
+.sub-progress{font-size:10px;color:var(--tp-warm-muted);margin-top:2px;letter-spacing:.3px}
+
+.rowdel{background:none;border:none;color:var(--tp-light-gray);cursor:pointer;font-size:18px;line-height:1;padding:4px 6px;transition:color .2s}
+.rowdel:hover{color:var(--tp-magenta)}
+.col-actions{width:40px;text-align:center}
+.empty{padding:60px 20px;text-align:center;color:var(--tp-warm-muted);font-size:15px}
+
+.tp-footer{background:var(--tp-dark-purple);color:#fff;padding:26px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+.tp-footer__txt{font-size:12px;opacity:.55}
+
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--tp-black);color:#fff;padding:13px 22px;font-size:13px;font-weight:600;letter-spacing:.5px;opacity:0;pointer-events:none;transition:all .3s;z-index:2000;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:760px){
+  .tp-nav{padding:0 16px;height:auto;flex-direction:column;gap:10px;padding-top:12px;padding-bottom:12px}
+  .header{padding:26px 18px}.header__title{font-size:26px}
+  .toolbar{padding:14px 16px;top:0;position:static}
+  .wrap{padding:18px 12px 50px}
+  .tp-nav__actions{flex-wrap:wrap;justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<nav class="tp-nav">
+  <div class="tp-nav__left">
+    <div class="tp-logo-mark">TP</div>
+    <span class="tp-nav__title">Project Tracker</span>
+  </div>
+  <div class="tp-nav__actions">
+    <span id="saveChip" class="savechip">Autosave</span>
+    <button class="btn btn--ghost btn--sm" id="btnAdd">+ Add Project</button>
+    <button class="btn btn--ghost btn--sm" id="btnImport">Import Excel</button>
+    <button class="btn btn--ghost btn--sm" id="btnCsv">Export CSV</button>
+    <button class="btn btn--ghost btn--sm" id="btnSave">Backup</button>
+    <button class="btn btn--ghost btn--sm" id="btnLoad">Restore</button>
+    <button class="btn btn--primary btn--sm" id="btnReset">Reset</button>
+    <input type="file" id="fileInput" accept="application/json" style="display:none">
+    <input type="file" id="importInput" accept=".xlsx,.xls,.csv,.txt" style="display:none">
+  </div>
+</nav>
+
+<header class="header">
+  <div class="header__label">COS Automation</div>
+  <div class="header__title">My Project Portfolio</div>
+  <div class="header__meta">Last updated: <span id="lastUpdated" contenteditable="true">14 September 2026</span> · <span id="projCount">0</span> projects tracked</div>
+
+  <div id="headerStats">
+    <div class="stats" id="stats"></div>
+
+    <div class="distro">
+      <div class="distro__track" id="distroTrack"></div>
+      <div class="distro__legend" id="distroLegend"></div>
+    </div>
+  </div>
+</header>
+
+
+
+<div class="toolbar">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" id="search" placeholder="Search projects, actions, POCs, notes…">
+  </div>
+  <div class="filters" id="projectFilters">
+    <span class="filter-label">Status</span>
+    <select class="pfilter" id="filterStatus">
+      <option value="">All</option>
+      <option>In Progress</option><option>Pending</option><option>On Hold</option><option>Live</option><option>At Risk</option><option>Closed</option><option>Cancelled</option>
+    </select>
+    <span class="filter-label">Priority</span>
+    <select class="pfilter" id="filterPriority">
+      <option value="">All</option><option>High</option><option>Medium</option><option>Low</option>
+    </select>
+    <span class="filter-label">Owner</span>
+    <select class="pfilter" id="filterOwner"><option value="">All</option></select>
+    <span class="filter-label">Dept</span>
+    <select class="pfilter" id="filterCat"><option value="">All</option></select>
+    <span class="filter-label">POC</span>
+    <select class="pfilter" id="filterPoc"><option value="">All</option></select>
+    <button class="btn btn--sm" id="btnClear" style="background:var(--tp-warm-gray);color:var(--tp-dark-purple)">Clear</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="paneProjects">
+  <div class="tablecard">
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="n">#<span class="arrow">▼</span></th><th data-sort="project">Project<span class="arrow">▼</span></th><th data-sort="category">Department<span class="arrow">▼</span></th><th data-sort="status">Status<span class="arrow">▼</span></th><th data-sort="priority">Priority<span class="arrow">▼</span></th><th data-sort="roi">ROI<span class="arrow">▼</span></th>
+          <th>Current Stage</th><th>Next Action</th><th data-sort="owner">Owner<span class="arrow">▼</span></th><th data-sort="poc">POC<span class="arrow">▼</span></th><th data-sort="created">Created<span class="arrow">▼</span></th><th data-sort="deadline">Deadline<span class="arrow">▼</span></th><th>Notes</th><th>Remarks</th><th>One-Pager</th><th>Presentation</th><th>GEO / MD</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="tp-footer">
+  <div class="tp-logo-mark">TP</div>
+  <span class="tp-footer__txt">TP Project Tracker · edits save automatically to this browser · use Backup to export a copy</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'tp_project_tracker_v18';
+const STATUS_OPTS = ['In Progress','Pending','On Hold','Live','At Risk','No Status','Closed','Cancelled'];
+const PRIORITY_OPTS = ['High','Medium','Low'];
+const SUB_STATUS = ['To Do','In Progress','Done','Blocked'];
+const STATUS_COLORS = {'In Progress':'#E8A83A','Pending':'#EDE7F6','On Hold':'#848DAC','Live':'#2E9CB8','At Risk':'#D64545','No Status':'#E4E2DC','Closed':'#3AA76D','Cancelled':'#B8B3A8'};
+const STATUS_CLASS = {'In Progress':'st-InProgress','Pending':'st-Pending','On Hold':'st-OnHold','Live':'st-Live','At Risk':'st-AtRisk','No Status':'st-NoStatus','Closed':'st-Closed','Cancelled':'st-Cancelled'};
+const PRIORITY_CLASS = {'High':'pr-High','Medium':'pr-Medium','Low':'pr-Low'};
+const SUB_CLASS = {'To Do':'subst-ToDo','In Progress':'subst-InProgress','Done':'subst-Done','Blocked':'subst-Blocked'};
+const REMARK_TYPES = ['Problem','To Review','Final Status'];
+const REMARK_CLASS = {'Problem':'rm-Problem','To Review':'rm-Review','Final Status':'rm-Final'};
+
+const SEED = [
+  {"n": 1, "code": "", "project": "tp-recruit - Unified Recruitment Platform", "category": "Recruiting", "status": "Cancelled", "priority": "High", "roi": "", "stage": "Live on Vercel - careers forms MY+TH, RCCF v2 recruiter dashboard, WhatsApp+LINE notification routing", "next": [], "owner": "Amr Mihany", "poc": "Pourya Tohidi", "created": "2026-07-01", "deadline": "", "notes": "Unified Vercel/Supabase recruitment platform - careers forms for Malaysia (/) and Thailand (/th) share a component, RCCF v2 recruiter dashboard with pipeline view, country-based notification routing (MY→WhatsApp, TH→LINE), daily Vercel cron reminders. Biggest recent build - not logged in TP One at all.", "onepager": "", "deck": "", "remarks": [{"text": "Not logged in TP One at all - biggest recent build, needs an entry.", "type": "To Review"}]},
+  {"n": 2, "code": "", "project": "RAF Dashboard (Referral Awareness Form)", "category": "Recruiting", "status": "Cancelled", "priority": "Medium", "roi": "", "stage": "v14 - OTP gate, dedupe, 6-language FAQ; 4 rounds of changes pending re-apply", "next": [{"text": "Get iCIMS API access", "status": "To Do"}, {"text": "Wait for RPA pipeline to start before going live with real data", "status": "Blocked"}], "owner": "Amr Mihany", "poc": "", "created": "2026-05-01", "deadline": "", "notes": "OTP-gated dashboard for employees to track referred candidates and payout eligibility. Two files: RAF_dashboard_14.html (latest base) and RAF_Process_Map.html. Separate from Tarek's RAF+/ExRAF/RAF New UI entries in TP One.", "onepager": "", "deck": "", "remarks": [{"text": "No iCIMS API access yet, and the RPA pipeline hasn't started - can't go live with real data until both land.", "type": "Problem"}, {"text": "Separate from Tarek's RAF+/ExRAF/RAF New UI entries - not logged under this name in TP One.", "type": "To Review"}]},
+  {"n": 3, "code": "", "project": "xRAF - External Referral Portal", "category": "Recruiting", "status": "Live", "priority": "Medium", "roi": "", "stage": "Live - OTP email auth, three-tier Touch 'n Go payouts", "next": [], "owner": "Amr Mihany", "poc": "", "created": "2026-02-01", "deadline": "", "notes": "External referral portal: OTP email auth, three-tier payment (RM500 Johor, RM800 standard, RM3,000 WFH interpreter), paid out via Touch 'n Go. Distinct from the RAF dashboard above.", "onepager": "", "deck": "", "remarks": [{"text": "Not logged in TP One - distinct from the RAF dashboard above.", "type": "To Review"}]},
+  {"n": 4, "code": "", "project": "GA4 Multi-Property Analytics Dashboard", "category": "Recruiting", "status": "In Progress", "priority": "Medium", "roi": "", "stage": "Creating a Power BI version with Eko Subiyantoro", "next": [{"text": "Create Power BI dashboard with Eko Subiyantoro", "status": "In Progress"}], "owner": "Amr Mihany", "poc": "Eko Subiyantoro", "created": "2026-04-01", "deadline": "", "notes": "GA4 acquisition analytics dashboard covering 13 TP properties. Python + GitHub Actions + Vercel, password-gated. Also includes an intranet migration tracking dashboard with GA4 integration. Now being rebuilt as a Power BI dashboard with Eko Subiyantoro.", "onepager": "", "deck": "", "remarks": [{"text": "Not logged in TP One yet.", "type": "To Review"}]},
+  {"n": 5, "code": "", "project": "TP Malaysia LINE Bot", "category": "Recruiting", "status": "Live", "priority": "Medium", "roi": "", "stage": "Deployed - Channel ID 2009474265", "next": [], "owner": "Amr Mihany", "poc": "", "created": "2026-06-24", "deadline": "", "notes": "Malaysia LINE recruitment bot, deployed under WABA ID 1993558511569746 / Phone Number ID 1067964896391785. Separate channel from the Thailand LINE bot already logged in TP One (RE-2026-042).", "onepager": "", "deck": "", "remarks": [{"text": "Not logged in TP One - separate channel from the Thailand LINE bot (RE-2026-042).", "type": "To Review"}]},
+  {"n": 6, "code": "", "project": "ELP - English Landing Page", "category": "Recruiting", "status": "Pending", "priority": "Low", "roi": "", "stage": "Rebuilt - scroll-snap, CFG{} config blocks, GA4 tags", "next": [], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-06-24", "deadline": "", "notes": "English-language recruitment landing page on GitHub Pages (TPMYandTPTH). Alongside KLP/MLP, which already have TP One entries (RE-2026-043, RE-2026-044).", "onepager": "", "deck": "", "remarks": [{"text": "Not logged in TP One - alongside KLP/MLP which already have entries.", "type": "To Review"}]},
+  {"n": 7, "code": "", "project": "TLP - Thai Landing Page", "category": "Recruiting", "status": "Live", "priority": "Medium", "roi": "", "stage": "Rebuilt - scroll-snap, CFG{} config blocks, GA4 tags", "next": [], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-06-24", "deadline": "", "notes": "Thai-language recruitment landing page on GitHub Pages (TPMYandTPTH). Content advisor: Cholthicha. Alongside KLP/MLP, which already have TP One entries.", "onepager": "", "deck": "", "remarks": [{"text": "Not logged in TP One - alongside KLP/MLP which already have entries.", "type": "To Review"}]},
+  {"n": 8, "code": "", "project": "JLP - Japanese Landing Page", "category": "Recruiting", "status": "Pending", "priority": "Medium", "roi": "", "stage": "Privacy/cookie/terms pages drafted - pending Legal sign-off before publishing", "next": [{"text": "Get Legal sign-off on privacy, cookie and terms pages", "status": "In Progress"}], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-06-24", "deadline": "", "notes": "Japanese-language recruitment landing page on GitHub Pages (TPMYandTPTH). Public-facing LP content needs stakeholder/Legal review before publishing - raised by Partiban Periannan, Jun 2026.", "onepager": "", "deck": "", "remarks": [{"text": "Privacy, cookie and terms pages drafted but still pending Legal sign-off before publishing (flagged by Partiban, Jun 2026).", "type": "Problem"}, {"text": "Not logged in TP One yet.", "type": "To Review"}]},
+  {"n": 9, "code": "", "project": "Joomla/YOOtheme Intranet Enhancements", "category": "Chief of Staff", "status": "On Hold", "priority": "Medium", "roi": "", "stage": "Blocked - waiting on the 1,200 action items before proceeding", "next": [{"text": "Waiting on the 1,200 action items", "status": "Blocked"}], "owner": "Amr Mihany", "poc": "Maszy Ulip", "created": "2026-01-01", "deadline": "", "notes": "Ongoing TPMY/TPTH Joomla intranet (YOOtheme Pro) enhancement work: leadership and department org charts, self-contained scoped-HTML department pages (Payroll FAQ, LSS Yellow Belt, Compensation & Benefits, Facilities, GTM/EP Roadshow, Policy & SOP Portal, WhatsApp community directory), internal job postings brand audit.", "onepager": "", "deck": "", "remarks": [{"text": "Ongoing enhancement work (org charts, dept pages, Policy & SOP portal) - not logged in TP One as its own entry.", "type": "To Review"}]},
+  {"n": 10, "code": "", "project": "RAF + Agency Trace - Phase 1", "category": "Recruiting", "status": "Closed", "priority": "Medium", "roi": "", "stage": "Phase 1 complete - handing off to Eko Subiyantoro (Power BI)", "next": [], "owner": "Amr Mihany", "poc": "Eko Subiyantoro", "created": "2026-05-01", "deadline": "", "notes": "Candidate source ownership and ownership-tier tracking dashboard for TP MY/TH Talent Acquisition - prevents paying agency fees for already-owned candidates. Build spec, HTML mockup (v5), one-pager and logic/rules audit delivered.", "onepager": "", "deck": "", "remarks": [{"text": "Phase 1 complete - handed off to Eko Subiyantoro (Power BI) for ongoing ownership.", "type": "Final Status"}]},
+  {"n": 11, "code": "RE-2026-042", "project": "TP Thailand LINE Bot", "category": "Recruiting", "status": "Cancelled", "priority": "Medium", "roi": "", "stage": "13-question bilingual Quick Apply, Flex Message UI, Google Sheets sync, freelance gate - security hardening complete (token rotation, PDPA gate, signature/SSRF fix); monitoring only", "next": [], "owner": "Amr Mihany", "poc": "Kent Teng", "created": "2026-06-24", "deadline": "", "notes": "Logged in TP One as RE-2026-042.", "onepager": "", "deck": "", "remarks": [{"text": "Logged in TP One - status matches (Cancelled).", "type": "Final Status"}]},
+  {"n": 12, "code": "RE-2026-043", "project": "KLP - Korean Landing Page", "category": "Recruiting", "status": "Live", "priority": "Medium", "roi": "", "stage": "Chloe translation review, KakaoTalk integration, gold/black aesthetic polish - final QA complete", "next": [], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-06-24", "deadline": "", "notes": "Logged in TP One as RE-2026-043.", "onepager": "", "deck": "", "remarks": [{"text": "Logged in TP One - status matches (Live).", "type": "Final Status"}]},
+  {"n": 13, "code": "RE-2026-044", "project": "MLP - Mandarin Landing Page", "category": "Recruiting", "status": "Closed", "priority": "Medium", "roi": "", "stage": "14 pages translated, 17 enhanced; bilingual local/expat toggle (268 pairs) - internal links + tracking added", "next": [], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-06-24", "deadline": "", "notes": "Logged in TP One as RE-2026-044 (Completed).", "onepager": "", "deck": "", "remarks": [{"text": "Logged in TP One - status matches (Completed).", "type": "Final Status"}]},
+  {"n": 14, "code": "", "project": "RAF - Referral Programme", "category": "Recruiting", "status": "Live", "priority": "Medium", "roi": "", "stage": "Live - maintenance mode", "next": [], "owner": "Amr Mihany", "poc": "", "created": "2026-01-01", "deadline": "", "notes": "The live employee referral programme. Ongoing maintenance only - distinct from the RAF Dashboard build, which was cancelled.", "onepager": "", "deck": "", "md": "", "remarks": [{"text": "Live and in maintenance - not logged in TP One as its own entry.", "type": "To Review"}]},
+  {"n": 15, "code": "", "project": "Landing Pages - Live Maintenance", "category": "Recruiting", "status": "Live", "priority": "Medium", "roi": "", "stage": "Live - maintenance mode across ELP / TLP / JLP / KLP / MLP and the LP hub", "next": [], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-06-24", "deadline": "", "notes": "Umbrella entry for the live language landing pages on GitHub Pages (TPMYandTPTH) - ongoing maintenance, content updates and tracking fixes across all languages.", "onepager": "", "deck": "", "md": "", "remarks": [{"text": "Live and in maintenance - not logged in TP One as its own entry.", "type": "To Review"}]},
+  {"n": 16, "code": "", "project": "GEO - English (ELP)", "category": "Recruiting", "status": "In Progress", "priority": "High", "roi": "", "stage": "Markdown / llms.txt for the English careers content so AI assistants can read and cite it", "next": [{"text": "Publish the English markdown and confirm AI assistants can reach it", "status": "To Do"}], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-09-01", "deadline": "", "notes": "Generative Engine Optimisation for the English landing page (ELP). Serving a markdown version of the careers content so AI assistants can read and cite it. Currently sits with the landing page, but may move elsewhere.", "onepager": "", "deck": "", "md": "", "remarks": [{"text": "AI assistants don't surface TP careers pages because they're hosted on GitHub Pages, not a tp.com domain.", "type": "Problem"}, {"text": "May move off the landing pages to a separate home - location not decided.", "type": "To Review"}]},
+  {"n": 17, "code": "", "project": "GEO - Thai (TLP)", "category": "Recruiting", "status": "In Progress", "priority": "High", "roi": "", "stage": "Markdown / llms.txt for the Thai careers content so AI assistants can read and cite it", "next": [{"text": "Publish the Thai markdown and confirm AI assistants can reach it", "status": "To Do"}], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-09-01", "deadline": "", "notes": "Generative Engine Optimisation for the Thai landing page (TLP). Serving a markdown version of the careers content so AI assistants can read and cite it. Currently sits with the landing page, but may move elsewhere.", "onepager": "", "deck": "", "md": "", "remarks": [{"text": "AI assistants don't surface TP careers pages because they're hosted on GitHub Pages, not a tp.com domain.", "type": "Problem"}, {"text": "May move off the landing pages to a separate home - location not decided.", "type": "To Review"}]},
+  {"n": 18, "code": "", "project": "GEO - Japanese (JLP)", "category": "Recruiting", "status": "In Progress", "priority": "High", "roi": "", "stage": "Markdown / llms.txt for the Japanese careers content so AI assistants can read and cite it", "next": [{"text": "Publish the Japanese markdown and confirm AI assistants can reach it", "status": "To Do"}], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-09-01", "deadline": "", "notes": "Generative Engine Optimisation for the Japanese landing page (JLP). Serving a markdown version of the careers content so AI assistants can read and cite it. Currently sits with the landing page, but may move elsewhere.", "onepager": "", "deck": "", "md": "", "remarks": [{"text": "AI assistants don't surface TP careers pages because they're hosted on GitHub Pages, not a tp.com domain.", "type": "Problem"}, {"text": "May move off the landing pages to a separate home - location not decided.", "type": "To Review"}]},
+  {"n": 19, "code": "", "project": "GEO - Korean (KLP)", "category": "Recruiting", "status": "In Progress", "priority": "High", "roi": "", "stage": "Markdown / llms.txt for the Korean careers content so AI assistants can read and cite it", "next": [{"text": "Publish the Korean markdown and confirm AI assistants can reach it", "status": "To Do"}], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-09-01", "deadline": "", "notes": "Generative Engine Optimisation for the Korean landing page (KLP). Serving a markdown version of the careers content so AI assistants can read and cite it. Currently sits with the landing page, but may move elsewhere.", "onepager": "", "deck": "", "md": "", "remarks": [{"text": "AI assistants don't surface TP careers pages because they're hosted on GitHub Pages, not a tp.com domain.", "type": "Problem"}, {"text": "May move off the landing pages to a separate home - location not decided.", "type": "To Review"}]},
+  {"n": 20, "code": "", "project": "GEO - Mandarin (MLP)", "category": "Recruiting", "status": "In Progress", "priority": "High", "roi": "", "stage": "Markdown / llms.txt for the Mandarin careers content so AI assistants can read and cite it", "next": [{"text": "Publish the Mandarin markdown and confirm AI assistants can reach it", "status": "To Do"}], "owner": "Amr Mihany", "poc": "Joseph Hiroyuki Ueda", "created": "2026-09-01", "deadline": "", "notes": "Generative Engine Optimisation for the Mandarin landing page (MLP). Serving a markdown version of the careers content so AI assistants can read and cite it. Currently sits with the landing page, but may move elsewhere.", "onepager": "", "deck": "", "md": "", "remarks": [{"text": "AI assistants don't surface TP careers pages because they're hosted on GitHub Pages, not a tp.com domain.", "type": "Problem"}, {"text": "May move off the landing pages to a separate home - location not decided.", "type": "To Review"}]},
+  {"n": 21, "code": "", "project": "Chatbot Knowledge Base (FAQ Bot)", "category": "Recruiting", "status": "In Progress", "priority": "High", "roi": "", "stage": "Building the knowledge base behind the FAQ chatbot", "next": [{"text": "Finish and validate the KB content", "status": "In Progress"}], "owner": "Amr Mihany", "poc": "", "created": "2026-08-01", "deadline": "", "notes": "Knowledge base powering the WhatsApp FAQ chatbot (Cloudflare Workers AI POC, free tier, KV session storage).", "onepager": "", "deck": "", "md": "", "remarks": [{"text": "Not logged in TP One yet.", "type": "To Review"}, {"text": "Confirm scope, status and target date - added from a quick mention.", "type": "To Review"}]},
+  {"n": 22, "code": "", "project": "Sanas - Deployment", "category": "Client Operations", "status": "In Progress", "priority": "High", "roi": "", "stage": "Deployment", "next": [{"text": "Continue deployment activities", "status": "In Progress"}], "owner": "Amr Mihany", "poc": "", "created": "2026-08-01", "deadline": "", "notes": "Sanas rollout. Amr's scope on this project is deployment only - not build or ownership of the wider project.", "onepager": "", "deck": "", "md": "", "remarks": [{"text": "Scope is deployment only - the rest of the project sits with someone else.", "type": "Final Status"}, {"text": "Confirm POC, status and target date - added from a quick mention.", "type": "To Review"}]}
+];
+
+let state = { lastUpdated:'14 September 2026', projects: [], pipeline: [], log: [], huddle: null };
+let filters = { search:'', status:'', priority:'', poc:'', cat:'', owner:'' };
+let sort = { key:'created', dir:-1 };
+
+/* ---------- date helpers ---------- */
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(iso){ const m=/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}:\d{2}))?/.exec(iso||''); 
+  if(!m) return iso||''; return (+m[3])+' '+MON[+m[2]-1]+' '+m[1]; }
+function fmtDateTime(iso){ const m=/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}:\d{2}))?/.exec(iso||'');
+  if(!m) return iso||''; return fmtDate(iso)+(m[4]?' '+m[4]:''); }
+function parseDate(v){ v=String(v||'').trim(); if(!v||v==='-') return '';
+  let m=/^(\d{4})-(\d{2})-(\d{2})/.exec(v); if(m) return v.slice(0,16);
+  m=/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/.exec(v);
+  if(m){ const mi=MON.findIndex(x=>x.toLowerCase()===m[2].toLowerCase()); if(mi>=0)
+    return m[3]+'-'+String(mi+1).padStart(2,'0')+'-'+m[1].padStart(2,'0'); }
+  m=/^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})$/.exec(v);            // 2026/12/31
+  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  m=/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(v);       // 31/12/2026, ambiguous -> D/M/Y
+  if(m){ let a=+m[1], b=+m[2], day, mon;
+    if(a>12){ day=a; mon=b; } else if(b>12){ day=b; mon=a; } else { day=a; mon=b; }
+    if(mon>=1&&mon<=12&&day>=1&&day<=31)
+      return m[3]+'-'+String(mon).padStart(2,'0')+'-'+String(day).padStart(2,'0'); }
+  return ''; }
+
+/* ---------- persistence ---------- */
+function save(){ try{
+    state.lastUpdated = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    const lu=document.getElementById('lastUpdated'); if(lu) lu.textContent=state.lastUpdated;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); flashSaved();
+  }catch(e){} }
+function load(){ try{ const raw=localStorage.getItem(STORAGE_KEY); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.projects)) return p; } }catch(e){} return null; }
+function flashSaved(){ const c=document.getElementById('saveChip'); c.textContent='Saved'; c.classList.add('on'); clearTimeout(flashSaved._t); flashSaved._t=setTimeout(()=>{c.textContent='Autosave';c.classList.remove('on');},1400); }
+
+/* ---------- migration / normalize (handles older saved data) ---------- */
+function splitActions(s){ const parts=s.split(/\s*\d+\)\s*/).map(x=>x.trim()).filter(Boolean); return parts.length>1?parts:[s]; }
+function normalizeProject(p){
+  if(typeof p.poc!=='string') p.poc = p.poc==null?'':String(p.poc);
+  if(typeof p.code!=='string') p.code = p.code==null?'':String(p.code);
+  if(typeof p.onepager!=='string') p.onepager = p.onepager==null?'':String(p.onepager);
+  if(typeof p.deck!=='string') p.deck = p.deck==null?'':String(p.deck);
+  if(typeof p.md!=='string') p.md = p.md==null?'':String(p.md);
+  if(typeof p.roi!=='string') p.roi = p.roi==null?'':String(p.roi);
+  if(!Array.isArray(p.remarks)) p.remarks = [];
+  else p.remarks = p.remarks.map(it => (typeof it==='string')
+    ? {text:it,type:'To Review'}
+    : {text:String(it&&it.text!=null?it.text:''), type:REMARK_TYPES.includes(it&&it.type)?it.type:'To Review'});
+  // older backups stored dates as display text and folded Cancelled/Live into Closed
+  p.created = parseDate(p.created) || (p.created||'');
+  p.deadline = parseDate(p.deadline) || (p.deadline||'');
+  if(!STATUS_OPTS.includes(p.status)) p.status='Pending';
+  if(!Array.isArray(p.next)){
+    const s=(p.next==null?'':String(p.next)).trim();
+    p.next = s ? splitActions(s).map(t=>({text:t,status:'To Do'})) : [];
+  } else {
+    p.next = p.next.map(it => (typeof it==='string')
+      ? {text:it,status:'To Do'}
+      : {text:String(it&&it.text!=null?it.text:''), status:SUB_STATUS.includes(it&&it.status)?it.status:'To Do'});
+  }
+  return p;
+}
+function normalize(st){
+  if(typeof st.lastUpdated!=='string') st.lastUpdated='';
+  if(!Array.isArray(st.projects)) st.projects=[];
+  st.projects.forEach(normalizeProject);
+}
+
+/* ---------- init ---------- */
+function init(){
+  const stored=load();
+  state = stored ? stored : { lastUpdated:'', projects: JSON.parse(JSON.stringify(SEED)) };
+  normalize(state);
+  if(!state.lastUpdated) state.lastUpdated = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('lastUpdated').textContent = state.lastUpdated;
+  renderAll(); bind();
+}
+function nextNum(){ return state.projects.reduce((m,p)=>Math.max(m,Number(p.n)||0),0)+1; }
+
+/* ---------- rendering ---------- */
+function counts(){ const c={}; STATUS_OPTS.forEach(s=>c[s]=0); state.projects.forEach(p=>{if(c[p.status]!==undefined)c[p.status]++;}); return c; }
+
+function renderStats(){
+  const c=counts(), total=state.projects.length, el=document.getElementById('stats');
+  const cards=[{key:'',label:'Total',num:total,dot:'#ffffff'},...STATUS_OPTS.map(s=>({key:s,label:s,num:c[s]||0,dot:STATUS_COLORS[s]}))];
+  el.innerHTML=cards.map(card=>`
+    <div class="stat ${filters.status===card.key && card.key!==''?'active':''}" data-status="${card.key}">
+      <div class="stat__num">${card.num}</div>
+      <div class="stat__lbl"><span class="stat__dot" style="background:${card.dot}"></span>${card.label}</div>
+    </div>`).join('');
+  document.getElementById('projCount').textContent=total;
+  renderDistro(c,total);
+}
+function renderDistro(c,total){
+  const track=document.getElementById('distroTrack'), legend=document.getElementById('distroLegend');
+  if(!total){ track.innerHTML=''; legend.innerHTML=''; return; }
+  track.innerHTML=STATUS_OPTS.filter(s=>c[s]>0).map(s=>`<div class="distro__seg" title="${s}: ${c[s]}" style="width:${(c[s]/total*100).toFixed(2)}%;background:${STATUS_COLORS[s]}"></div>`).join('');
+  legend.innerHTML=STATUS_OPTS.map(s=>`<span><i style="background:${STATUS_COLORS[s]}"></i>${s} · ${c[s]||0}</span>`).join('');
+}
+
+function refreshCatFilter(){
+  const sel=document.getElementById('filterCat'), cur=filters.cat;
+  const cats=[...new Set(state.projects.map(p=>(p.category||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML='<option value="">All</option>'+cats.map(c=>`<option value="${esc(c)}" ${c===cur?'selected':''}>${esc(c)}</option>`).join('');
+  if(cur && !cats.includes(cur)){ filters.cat=''; sel.value=''; }
+}
+function refreshPocFilter(){
+  const sel=document.getElementById('filterPoc'), cur=filters.poc;
+  const pocs=[...new Set(state.projects.map(p=>(p.poc||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML='<option value="">All</option>'+pocs.map(p=>`<option value="${esc(p)}" ${p===cur?'selected':''}>${esc(p)}</option>`).join('');
+  if(cur && !pocs.includes(cur)){ filters.poc=''; sel.value=''; }
+}
+function refreshOwnerFilter(){
+  const sel=document.getElementById('filterOwner'), cur=filters.owner;
+  const owners=[...new Set(state.projects.map(p=>(p.owner||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML='<option value="">All</option>'+owners.map(o=>`<option value="${esc(o)}" ${o===cur?'selected':''}>${esc(o)}</option>`).join('');
+  if(cur && !owners.includes(cur)){ filters.owner=''; sel.value=''; }
+}
+
+function visibleProjects(){
+  const q=filters.search.trim().toLowerCase();
+  return state.projects.filter(p=>{
+    if(filters.status && p.status!==filters.status) return false;
+    if(filters.priority && p.priority!==filters.priority) return false;
+    if(filters.poc && (p.poc||'').trim()!==filters.poc) return false;
+    if(filters.cat && (p.category||'').trim()!==filters.cat) return false;
+    if(filters.owner && (p.owner||'').trim()!==filters.owner) return false;
+    if(q){
+      const nextTxt=(p.next||[]).map(it=>it.text+' '+it.status).join(' ');
+      const hay=[p.code,p.project,p.category,p.stage,nextTxt,p.owner,p.poc,
+        fmtDateTime(p.created),fmtDate(p.deadline),p.notes,p.status,p.priority,p.roi].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  }).sort(cmp);
+}
+
+const RANK_STATUS={'In Progress':0,'Pending':1,'On Hold':2,'Live':3,'At Risk':4,'No Status':5,'Closed':6,'Cancelled':7};
+const RANK_PRIO={'High':0,'Medium':1,'Low':2};
+function sortVal(p,k){
+  if(k==='n') return Number(p.n)||0;
+  if(k==='status') return RANK_STATUS[p.status]??9;
+  if(k==='priority') return RANK_PRIO[p.priority]??9;
+  if(k==='created'||k==='deadline') return parseDate(p[k]);
+  if(k==='roi'){ const m=String(p.roi||'').replace(/,/g,'').match(/\d+(?:\.\d+)?/); return m?Number(m[0]):''; }
+  return String(p[k]||'').toLowerCase();
+}
+function cmp(a,b){
+  // Cancelled projects always sink to the bottom, whichever column/direction we're sorting
+  const ac=a.status==='Cancelled', bc=b.status==='Cancelled';
+  if(ac!==bc) return ac?1:-1;
+  const x=sortVal(a,sort.key), y=sortVal(b,sort.key);
+  // blanks always sink to the bottom, whichever direction we're sorting
+  const bx=(x===''||x==null), by=(y===''||y==null);
+  if(bx!==by) return bx?1:-1;
+  if(x<y) return -sort.dir; if(x>y) return sort.dir;
+  return (Number(a.n)||0)-(Number(b.n)||0);
+}
+
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function statusSelect(p,i){ return `<select class="badge-select ${STATUS_CLASS[p.status]||''}" data-i="${i}" data-f="status">`+STATUS_OPTS.map(o=>`<option ${o===p.status?'selected':''}>${o}</option>`).join('')+`</select>`; }
+function prioritySelect(p,i){ return `<select class="badge-select ${PRIORITY_CLASS[p.priority]||''}" data-i="${i}" data-f="priority">`+PRIORITY_OPTS.map(o=>`<option ${o===p.priority?'selected':''}>${o}</option>`).join('')+`</select>`; }
+function subStatusSelect(i,j,st){ return `<select class="sub-status ${SUB_CLASS[st]||'subst-ToDo'}" data-i="${i}" data-j="${j}" data-f="substatus">`+SUB_STATUS.map(o=>`<option ${o===st?'selected':''}>${o}</option>`).join('')+`</select>`; }
+function remarkTypeSelect(i,j,type){ return `<select class="sub-status remark-select ${REMARK_CLASS[type]||'rm-Review'}" data-i="${i}" data-j="${j}" data-f="remarktype">`+REMARK_TYPES.map(o=>`<option ${o===type?'selected':''}>${o}</option>`).join('')+`</select>`; }
+
+function remarksCell(p,i){
+  const items=Array.isArray(p.remarks)?p.remarks:[];
+  const rows=items.map((it,j)=>`
+    <div class="subitem">
+      ${remarkTypeSelect(i,j,it.type)}
+      <div class="sub-text cell-edit" contenteditable="true" data-i="${i}" data-j="${j}" data-f="remarktext">${esc(it.text)}</div>
+      <button class="rem-del" data-remdel-i="${i}" data-remdel-j="${j}" title="Remove remark">×</button>
+    </div>`).join('');
+  return `<div class="subitems">${rows}<button class="rem-add" data-addrem="${i}">+ remark</button></div>`;
+}
+
+
+function nextCell(p,i){
+  const items=Array.isArray(p.next)?p.next:[];
+  const done=items.filter(it=>it.status==='Done').length;
+  const rows=items.map((it,j)=>`
+    <div class="subitem ${it.status==='Done'?'done':''}">
+      ${subStatusSelect(i,j,it.status)}
+      <div class="sub-text cell-edit" contenteditable="true" data-i="${i}" data-j="${j}" data-f="subtext">${esc(it.text)}</div>
+      <button class="sub-del" data-subdel-i="${i}" data-subdel-j="${j}" title="Remove action">×</button>
+    </div>`).join('');
+  const prog = items.length ? `<div class="sub-progress">${done}/${items.length} done</div>` : '';
+  return `<div class="subitems">${rows}${prog}<button class="sub-add" data-addsub="${i}">+ action</button></div>`;
+}
+
+function renderTable(){
+  const tbody=document.getElementById('tbody'), rows=visibleProjects();
+  if(!rows.length){ tbody.innerHTML=`<tr><td colspan="18" class="empty">No projects match your filters.</td></tr>`; return; }
+  tbody.innerHTML=rows.map((p,rowIdx)=>{
+    const i=state.projects.indexOf(p);
+    return `<tr data-i="${i}" class="${p.status==='Cancelled'?'is-cancelled':''}">
+      <td class="num">${rowIdx+1}</td>
+      <td class="col-project"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="project">${esc(p.project)}</div>${p.code?`<span class="pcode">${esc(p.code)}</span>`:''}</td>
+      <td class="col-category"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="category">${esc(p.category)}</div></td>
+      <td>${statusSelect(p,i)}</td>
+      <td>${prioritySelect(p,i)}</td>
+      <td class="col-roi"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="roi">${esc(p.roi)}</div></td>
+      <td class="col-stage"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="stage">${esc(p.stage)}</div></td>
+      <td class="col-next">${nextCell(p,i)}</td>
+      <td class="col-owner"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="owner">${esc(p.owner)}</div></td>
+      <td class="col-poc"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="poc">${esc(p.poc)}</div></td>
+      <td class="col-created">${esc(fmtDateTime(p.created))}</td>
+      <td class="col-deadline"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="deadline">${esc(fmtDate(p.deadline))}</div></td>
+      <td class="col-notes"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="notes">${esc(p.notes)}</div></td>
+      <td class="col-remarks">${remarksCell(p,i)}</td>
+      <td class="col-link">${linkCell(p.onepager,i,'onepager')}</td>
+      <td class="col-link">${linkCell(p.deck,i,'deck')}</td>
+      <td class="col-link">${linkCell(p.md,i,'md')}</td>
+      <td class="col-actions"><button class="rowdel" data-del="${i}" title="Delete project">×</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAll(){ renderStats(); refreshPocFilter(); refreshCatFilter(); refreshOwnerFilter(); renderTable(); renderSortArrows(); }
+function renderSortArrows(){
+  document.querySelectorAll('thead th[data-sort]').forEach(th=>{
+    const on=th.dataset.sort===sort.key;
+    th.classList.toggle('sorted',on);
+    th.querySelector('.arrow').textContent = on ? (sort.dir===1?'\u25b2':'\u25bc') : '\u25bc';
+  });
+}
+
+/* ---------- events ---------- */
+function bind(){
+  bindImport();
+  const tbody=document.getElementById('tbody');
+
+  tbody.addEventListener('input', e=>{
+    const cell=e.target.closest('.cell-edit'); if(!cell) return;
+    const i=+cell.dataset.i;
+    if(cell.dataset.f==='subtext'){ state.projects[i].next[+cell.dataset.j].text=cell.innerText.trim(); }
+    else if(cell.dataset.f==='remarktext'){ state.projects[i].remarks[+cell.dataset.j].text=cell.innerText.trim(); }
+    else { const f=cell.dataset.f, t=cell.innerText.trim();
+      state.projects[i][f] = (f==='deadline') ? (parseDate(t)||t) : t; }
+    save();
+  });
+
+  tbody.addEventListener('keydown', e=>{
+    const c=e.target.closest('.link-input'); if(!c) return;
+    if(e.key==='Enter'){ e.preventDefault(); c.blur(); }
+    if(e.key==='Escape'){ e.preventDefault(); editingLink=null; renderTable(); }
+  });
+
+  // rebuild POC filter after a POC edit finishes
+  tbody.addEventListener('focusout', e=>{ const c=e.target.closest('.cell-edit'); if(!c) return;
+    if(c.dataset.f==='poc') refreshPocFilter();
+    if(c.dataset.f==='category') refreshCatFilter();
+    if(c.dataset.f==='owner') refreshOwnerFilter();
+    if(c.dataset.f==='deadline') renderTable();
+    if(c.classList.contains('link-input')){ editingLink=null; renderTable(); } });
+
+  tbody.addEventListener('change', e=>{
+    const sel=e.target.closest('select'); if(!sel) return;
+    const i=+sel.dataset.i, f=sel.dataset.f;
+    if(f==='substatus'){
+      const j=+sel.dataset.j; state.projects[i].next[j].status=sel.value;
+      sel.className='sub-status '+(SUB_CLASS[sel.value]||'');
+      const si=sel.closest('.subitem'); si.classList.toggle('done', sel.value==='Done');
+      const prog=si.parentElement.querySelector('.sub-progress');
+      if(prog){ const items=state.projects[i].next; prog.textContent=items.filter(x=>x.status==='Done').length+'/'+items.length+' done'; }
+      save(); return;
+    }
+    if(f==='status'){ state.projects[i].status=sel.value; sel.className='badge-select '+(STATUS_CLASS[sel.value]||'');
+      sel.closest('tr').classList.toggle('is-cancelled', sel.value==='Cancelled'); renderStats(); save(); return; }
+    if(f==='priority'){ state.projects[i].priority=sel.value; sel.className='badge-select '+(PRIORITY_CLASS[sel.value]||''); save(); return; }
+    if(f==='remarktype'){
+      const j=+sel.dataset.j; state.projects[i].remarks[j].type=sel.value;
+      sel.className='sub-status remark-select '+(REMARK_CLASS[sel.value]||'');
+      save(); return;
+    }
+  });
+
+  tbody.addEventListener('click', e=>{
+    const del=e.target.closest('.rowdel');
+    if(del){ const i=+del.dataset.del; if(confirm('Delete "'+(state.projects[i].project||'this project')+'"?')){ state.projects.splice(i,1); renderAll(); save(); toast('Project deleted'); } return; }
+    const sdel=e.target.closest('.sub-del');
+    if(sdel){ const i=+sdel.dataset.subdelI, j=+sdel.dataset.subdelJ; state.projects[i].next.splice(j,1); renderTable(); save(); return; }
+    const sadd=e.target.closest('.sub-add');
+    if(sadd){ const i=+sadd.dataset.addsub; state.projects[i].next.push({text:'',status:'To Do'}); renderTable(); save();
+      const cells=document.querySelectorAll('.sub-text[data-i="'+i+'"]'); const last=cells[cells.length-1]; if(last) last.focus(); return; }
+    const rdel=e.target.closest('.rem-del');
+    if(rdel){ const i=+rdel.dataset.remdelI, j=+rdel.dataset.remdelJ; state.projects[i].remarks.splice(j,1); renderTable(); save(); return; }
+    const radd=e.target.closest('.rem-add');
+    if(radd){ const i=+radd.dataset.addrem; state.projects[i].remarks.push({text:'',type:'To Review'}); renderTable(); save();
+      const cells=document.querySelectorAll('.col-remarks .sub-text[data-i="'+i+'"]'); const last=cells[cells.length-1]; if(last) last.focus(); return; }
+    const ledit=e.target.closest('.link-edit');
+    if(ledit){
+      editingLink={ i:+ledit.dataset.editlinkI, field:ledit.dataset.editlinkF };
+      renderTable();
+      const f=document.querySelector('.link-input[data-i="'+editingLink.i+'"][data-f="'+editingLink.field+'"]');
+      if(f){ f.focus();
+        const r=document.createRange(); r.selectNodeContents(f);
+        const s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      }
+      return; }
+  });
+
+  document.getElementById('lastUpdated').addEventListener('input', e=>{
+    state.lastUpdated=e.target.innerText.trim();
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); flashSaved(); }catch(err){}
+  });
+
+  document.getElementById('btnAdd').addEventListener('click', ()=>{
+    const today=new Date().toISOString().slice(0,16);
+    state.projects.push({n:nextNum(),code:'',project:'New project',category:'',status:'Pending',priority:'Medium',roi:'',stage:'',next:[{text:'',status:'To Do'}],owner:'',poc:'',created:today,deadline:'',notes:'',onepager:'',deck:'',md:'',remarks:[]});
+    resetFilterUI(); renderAll(); save();
+    const rows=document.querySelectorAll('#tbody tr'); const last=rows[rows.length-1];
+    if(last){ last.scrollIntoView({behavior:'smooth',block:'center'}); const c=last.querySelector('.cell-edit'); if(c) c.focus(); }
+    toast('Project added');
+  });
+
+  document.getElementById('stats').addEventListener('click', e=>{
+    const s=e.target.closest('.stat'); if(!s) return;
+    const key=s.dataset.status; filters.status=(filters.status===key)?'':key;
+    document.getElementById('filterStatus').value=filters.status; renderAll();
+  });
+
+  document.getElementById('search').addEventListener('input', e=>{ filters.search=e.target.value; renderTable(); });
+  document.getElementById('filterStatus').addEventListener('change', e=>{ filters.status=e.target.value; renderAll(); });
+  document.getElementById('filterPriority').addEventListener('change', e=>{ filters.priority=e.target.value; renderTable(); });
+  document.getElementById('filterPoc').addEventListener('change', e=>{ filters.poc=e.target.value; renderTable(); });
+  document.getElementById('filterCat').addEventListener('change', e=>{ filters.cat=e.target.value; renderTable(); });
+  document.getElementById('filterOwner').addEventListener('change', e=>{ filters.owner=e.target.value; renderTable(); });
+  document.getElementById('btnClear').addEventListener('click', ()=>{ resetFilterUI(); renderAll(); });
+  document.querySelector('thead').addEventListener('click', e=>{
+    const th=e.target.closest('th[data-sort]'); if(!th) return;
+    const k=th.dataset.sort;
+    if(sort.key===k) sort.dir=-sort.dir;
+    else { sort.key=k; sort.dir=(k==='created'||k==='deadline')?-1:1; }
+    renderTable(); renderSortArrows();
+  });
+
+  document.getElementById('btnCsv').addEventListener('click', exportCSV);
+  document.getElementById('btnSave').addEventListener('click', ()=>{ downloadFile(JSON.stringify(state,null,2),'project-tracker-backup.json','application/json'); toast('Backup downloaded'); });
+  document.getElementById('btnLoad').addEventListener('click', ()=>document.getElementById('fileInput').click());
+  document.getElementById('fileInput').addEventListener('change', e=>{
+    const file=e.target.files[0]; if(!file) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ const p=JSON.parse(r.result);
+      if(p&&Array.isArray(p.projects)){ state=p; normalize(state); document.getElementById('lastUpdated').textContent=state.lastUpdated||''; resetFilterUI(); renderAll(); save(); toast('Backup restored'); }
+      else toast('Invalid backup file');
+    }catch(err){ toast('Could not read file'); } };
+    r.readAsText(file); e.target.value='';
+  });
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    if(confirm('Reset your projects to the starting data? Your current edits will be replaced.')){
+      state={ lastUpdated:'', projects: JSON.parse(JSON.stringify(SEED)) }; normalize(state);
+      resetFilterUI(); document.getElementById('lastUpdated').textContent=state.lastUpdated; renderAll(); save(); toast('Reset to original');
+    }
+  });
+}
+
+function resetFilterUI(){
+  filters={search:'',status:'',priority:'',poc:'',cat:'',owner:''};
+  document.getElementById('search').value='';
+  document.getElementById('filterStatus').value='';
+  document.getElementById('filterPriority').value='';
+  document.getElementById('filterPoc').value='';
+  document.getElementById('filterCat').value='';
+  document.getElementById('filterOwner').value='';
+}
+
+/* ---------- export ---------- */
+function exportCSV(){
+  const cols=[['n','#'],['code','Code'],['project','Project'],['category','Department'],['status','Status'],['priority','Priority'],['roi','ROI'],['stage','Current Stage'],['next','Next Action'],['owner','Owner'],['poc','POC'],['created','Created'],['deadline','Deadline'],['notes','Notes'],['remarks','Remarks'],['onepager','One-Pager'],['deck','Presentation'],['md','GEO / MD']];
+  const q=s=>{ s=String(s==null?'':s); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+  let csv=cols.map(c=>q(c[1])).join(',')+'\n';
+  visibleProjects().forEach((p,rowIdx)=>{
+    csv+=cols.map(c=>{
+      if(c[0]==='n'){ return q(rowIdx+1); }
+      if(c[0]==='next'){ return q((p.next||[]).map(it=>'['+it.status+'] '+it.text).join('\n')); }
+      if(c[0]==='remarks'){ return q((p.remarks||[]).map(it=>'['+it.type+'] '+it.text).join('\n')); }
+      if(c[0]==='created') return q(fmtDateTime(p.created));
+      if(c[0]==='deadline') return q(fmtDate(p.deadline));
+      return q(p[c[0]]);
+    }).join(',')+'\n';
+  });
+  downloadFile(csv,'project-tracker.csv','text/csv;charset=utf-8;'); toast('CSV exported ('+visibleProjects().length+' rows)');
+}
+function downloadFile(content,name,type){
+  const blob=new Blob([content],{type}), url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),1900); }
+
+/* ---------- linked documents (One-Pager / Presentation / MD) ---------- */
+let editingLink = null;   // {i, field} - which link cell is currently in edit mode
+function linkLabel(url){
+  let s = String(url||'').replace(/^https?:\/\//,'').replace(/^www\./,'');
+  return s.length > 30 ? s.slice(0,29)+'\u2026' : s;
+}
+function linkCell(url,i,field){
+  url = String(url||'').trim();
+  const isEditing = editingLink && editingLink.i===i && editingLink.field===field;
+  if(isEditing || !url){
+    return `<div class="linkcell">
+      <div class="cell-edit link-input" contenteditable="true" data-i="${i}" data-f="${field}">${esc(url)}</div>
+    </div>`;
+  }
+  const href = /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : 'https://'+url;
+  return `<div class="linkcell">
+    <a class="link-a" href="${esc(href)}" target="_blank" rel="noopener noreferrer" title="${esc(url)}">${esc(linkLabel(url))}</a>
+    <button class="link-edit" data-editlink-i="${i}" data-editlink-f="${field}" title="Edit link">\u270e</button>
+  </div>`;
+}
+/* ===================== BULK IMPORT (xlsx / csv) ===================== */
+const SHEETJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+
+/* header aliases -> our field. lower-cased, non-alphanumerics stripped. */
+const COL_ALIASES = {
+  code:      ['code','projectcode','id','projectid','ref','reference'],
+  project:   ['project','projecttitle','title','projectname','name'],
+  category:  ['category','department','dept','team','function'],
+  status:    ['status','projectstatus','state'],
+  priority:  ['priority','priorityupdate','prio'],
+  owner:     ['owner','projectowner','projectlead','lead','requestedby','sponsor','projectsponsor'],
+  poc:       ['poc','projectmember','member','assignedto','assignee','contact'],
+  created:   ['created','createdon','createddate','startdate','start','datecreated'],
+  deadline:  ['deadline','duedate','due','targetdate','commitmentdate','enddate'],
+  stage:     ['stage','currentstage','phase'],
+  next:      ['next','nextaction','nextsteps','nextstep','actions','actiontitle','activitydetails'],
+  notes:     ['notes','note','details','projectdetails','description','comments','remarks'],
+  onepager:  ['onepager','onepagerlink','onepager1','1pager','1pagerlink','onesheet'],
+  deck:      ['presentation','presentationlink','deck','decklink','slides','slidedeck','ppt'],
+  roi:       ['roi','roivalue','savings','benefit','impact','estimatedroi','annualroi'],
+  md:        ['md','mdfile','markdown','geo','geomd','geolink','readme','readmelink','doc','docs','documentation'],
+};
+function normHeader(h){ return String(h==null?'':h).toLowerCase().replace(/[^a-z0-9]/g,''); }
+function mapHeaders(hdr){
+  const map={};
+  hdr.forEach((h,i)=>{
+    const n=normHeader(h); if(!n) return;
+    for(const field in COL_ALIASES){
+      if(map[field]!==undefined) continue;
+      if(COL_ALIASES[field].includes(n)){ map[field]=i; return; }
+    }
+  });
+  return map;
+}
+
+const IMP_STATUS = {completed:'Closed',complete:'Closed',done:'Closed',closed:'Closed',
+  inprogress:'In Progress',ongoing:'In Progress',active:'In Progress',
+  pending:'Pending',onhold:'On Hold',hold:'On Hold',live:'Live',
+  cancelled:'Cancelled',canceled:'Cancelled',atrisk:'At Risk',
+  nostatus:'No Status',none:'No Status'};
+const IMP_PRIO = {p1:'High',p2:'Medium',p3:'Low',p4:'Low',
+  high:'High',med:'Medium',medium:'Medium',low:'Low',critical:'High',urgent:'High'};
+
+function cellText(v){
+  if(v==null) return '';
+  if(v instanceof Date) return v.toISOString().slice(0,10);
+  return String(v).replace(/\u200b/g,'').replace(/\s+/g,' ').trim();
+}
+function splitActions(s){
+  s=(s==null?'':String(s)).replace(/\u200b/g,'').replace(/\r\n?/g,'\n').trim();
+  if(!s) return [];
+  let parts = s.includes('\n') ? s.split('\n') : s.split(/(?:^|\s)\d+[.)]\s/);
+  parts = parts.map(x=>x.replace(/[ \t]+/g,' ').trim()).filter(Boolean);
+  return parts.map(t=>{
+    const m=/^\[([^\]]+)\]\s*(.*)$/.exec(t);          // "[Done] text"
+    if(m && SUB_STATUS.includes(m[1])) return {text:m[2].trim(),status:m[1]};
+    return {text:t,status:'To Do'};
+  });
+}
+
+function rowToProject(row,map){
+  const get=f => map[f]===undefined ? '' : cellText(row[map[f]]);
+  const title=get('project');
+  if(!title) return null;
+  const rawSt=get('status').toLowerCase().replace(/[^a-z]/g,'');
+  const rawPr=get('priority').toLowerCase().replace(/[^a-z0-9]/g,'');
+  return {
+    n:0, code:get('code'), project:title,
+    category:get('category'),
+    status: IMP_STATUS[rawSt] || (rawSt?'Pending':'No Status'),
+    priority: IMP_PRIO[rawPr] || 'Medium',
+    stage: get('stage') || '-',
+    next: splitActions(map.next===undefined?'':row[map.next]),
+    owner:get('owner'), poc:get('poc'),
+    created: parseDate(get('created')) || '',
+    deadline: parseDate(get('deadline')) || '',
+    notes:get('notes'),
+    onepager:get('onepager'), deck:get('deck'), md:get('md'), roi:get('roi'),
+  };
+}
+
+function ingestRows(rows,label){
+  rows = rows.filter(r=>Array.isArray(r) && r.some(c=>cellText(c)!==''));
+  if(rows.length<2){ alert('That file has no data rows.'); return; }
+
+  // find the header row within the first few lines
+  let hi=-1,map=null;
+  for(let i=0;i<Math.min(6,rows.length);i++){
+    const m=mapHeaders(rows[i]);
+    if(m.project!==undefined){ hi=i; map=m; break; }
+  }
+  if(hi<0){
+    alert('Could not find a "Project" column.\n\nThe file needs a header row with at least a Project column. '+
+          'Department, Status, Priority, Owner, POC, Created, Deadline, Next Action and Notes are all optional.');
+    return;
+  }
+
+  const found=[],skipped=[];
+  const haveCode=new Set(state.projects.map(p=>(p.code||'').trim().toLowerCase()).filter(Boolean));
+  const haveName=new Set(state.projects.map(p=>(p.project||'').trim().toLowerCase()));
+  const seen=new Set();
+  for(let i=hi+1;i<rows.length;i++){
+    const p=rowToProject(rows[i],map); if(!p) continue;
+    const key=(p.code?'c:'+p.code.toLowerCase():'n:'+p.project.toLowerCase());
+    const dupInFile=seen.has(key);
+    const dupInApp=(p.code && haveCode.has(p.code.toLowerCase())) || haveName.has(p.project.toLowerCase());
+    seen.add(key);
+    if(dupInFile||dupInApp) skipped.push(p.project); else found.push(p);
+  }
+
+  const cols=Object.keys(map).filter(k=>map[k]!==undefined);
+  if(!found.length){
+    alert('Nothing new to import from '+label+'.\n\n'+
+      (skipped.length? skipped.length+' row'+(skipped.length>1?'s':'')+' already exist in the tracker (matched on code or project name).'
+                     : 'No rows had a project name.'));
+    return;
+  }
+  const msg='Import '+found.length+' project'+(found.length>1?'s':'')+' from '+label+'?\n\n'+
+    'Columns recognised: '+cols.join(', ')+'\n'+
+    (skipped.length? '\nSkipping '+skipped.length+' row'+(skipped.length>1?'s':'')+' already in the tracker.\n' : '')+
+    '\nFirst few:\n'+found.slice(0,5).map(p=>'  \u2022 '+p.project).join('\n')+
+    (found.length>5?'\n  \u2026 and '+(found.length-5)+' more':'');
+  if(!confirm(msg)) return;
+
+  const start=state.projects.length;
+  found.forEach(p=>state.projects.push(p));
+  state.projects.forEach((p,i)=>{ p.n=i+1; });
+  state.projects.slice(start).forEach(normalizeProject);
+  resetFilterUI(); renderAll(); save();
+  toast('Imported '+found.length+' project'+(found.length>1?'s':''));
+}
+
+/* ---------- CSV (always works, no network) ---------- */
+function parseCSV(text){
+  const rows=[]; let row=[], cur='', q=false;
+  text=text.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n');
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){ cur+='"'; i++; } else q=false; }
+      else cur+=c;
+    } else if(c==='"') q=true;
+    else if(c===','){ row.push(cur); cur=''; }
+    else if(c==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+    else cur+=c;
+  }
+  row.push(cur); rows.push(row);
+  return rows;
+}
+
+/* ---------- XLSX via SheetJS, loaded on demand ---------- */
+let sheetjsPromise=null;
+function loadSheetJS(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  if(sheetjsPromise) return sheetjsPromise;
+  sheetjsPromise=new Promise((res,rej)=>{
+    const t=document.createElement('script');
+    t.src=SHEETJS_CDN;
+    t.onload=()=>window.XLSX?res(window.XLSX):rej(new Error('loaded but missing'));
+    t.onerror=()=>rej(new Error('blocked'));
+    document.head.appendChild(t);
+    setTimeout(()=>rej(new Error('timeout')),15000);
+  });
+  return sheetjsPromise;
+}
+
+function handleImportFile(file){
+  const name=file.name, ext=name.toLowerCase().split('.').pop();
+  if(ext==='csv'||ext==='txt'){
+    const r=new FileReader();
+    r.onload=()=>{ try{ ingestRows(parseCSV(r.result),name); }
+                   catch(err){ alert('Could not read that CSV.\n\n'+err.message); } };
+    r.onerror=()=>alert('Could not read that file.');
+    r.readAsText(file);
+    return;
+  }
+  toast('Reading '+name+'\u2026');
+  loadSheetJS().then(XLSX=>{
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const wb=XLSX.read(new Uint8Array(r.result),{type:'array',cellDates:true});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        ingestRows(XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''}),
+                   name+' - sheet "'+wb.SheetNames[0]+'"');
+      }catch(err){ alert('Could not read that Excel file.\n\n'+err.message); }
+    };
+    r.onerror=()=>alert('Could not read that file.');
+    r.readAsArrayBuffer(file);
+  }).catch(()=>{
+    alert('Reading .xlsx needs the Excel reader, which loads from the internet the first time you use it '+
+          '- and it could not be reached.\n\nEasiest fix: open the file in Excel and use '+
+          'File \u203a Save As \u203a CSV, then import that. CSV import works completely offline.');
+  });
+}
+
+function bindImport(){
+  document.getElementById('btnImport').addEventListener('click',
+    ()=>document.getElementById('importInput').click());
+  document.getElementById('importInput').addEventListener('change', e=>{
+    const f=e.target.files[0]; e.target.value='';
+    if(f) handleImportFile(f);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
