@@ -104,6 +104,12 @@ td.num{font-weight:700;color:var(--tp-deep-purple);width:44px;text-align:center}
 .col-created{color:var(--tp-warm-muted);font-size:12.5px}
 .pcode{display:block;font-size:10.5px;font-weight:600;letter-spacing:.6px;color:var(--tp-warm-muted);margin-top:3px}
 .col-link{min-width:180px;max-width:230px}
+.col-docs{min-width:196px}
+.docbtns{display:flex;gap:5px;flex-wrap:wrap}
+.docbtn{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:4px 9px;border-radius:3px;text-decoration:none;white-space:nowrap;border:1px solid var(--tp-magenta);color:var(--tp-magenta);background:#fff;transition:var(--transition-fast)}
+a.docbtn:hover{background:var(--tp-magenta);color:#fff}
+.docbtn.is-off{border-color:#E2E0DB;color:#BFBDB7;background:#FAFAF9;cursor:default}
+.docbtn.is-wait{border-color:#E2E0DB;color:#D6D4CF;background:#fff;cursor:default}
 .linkcell{display:flex;align-items:center;gap:10px}
 .linkcell .cell-edit{flex:1;min-width:150px}
 .link-input:empty::before{content:'Paste link here…';color:#c9c9d4;font-style:normal}
@@ -296,7 +302,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
       <thead>
         <tr>
           <th data-sort="n">#<span class="arrow">▼</span></th><th data-sort="project">Project<span class="arrow">▼</span></th><th data-sort="category">Department<span class="arrow">▼</span></th><th data-sort="status">Status<span class="arrow">▼</span></th><th data-sort="priority">Priority<span class="arrow">▼</span></th><th data-sort="roi">ROI<span class="arrow">▼</span></th>
-          <th>Current Stage</th><th>Next Action</th><th data-sort="owner">Owner<span class="arrow">▼</span></th><th data-sort="poc">POC<span class="arrow">▼</span></th><th data-sort="created">Created<span class="arrow">▼</span></th><th data-sort="deadline">Deadline<span class="arrow">▼</span></th><th>Notes</th><th>Remarks</th><th>One-Pager</th><th>Presentation</th><th>GEO / MD</th><th></th>
+          <th>Current Stage</th><th>Next Action</th><th data-sort="owner">Owner<span class="arrow">▼</span></th><th data-sort="poc">POC<span class="arrow">▼</span></th><th data-sort="created">Created<span class="arrow">▼</span></th><th data-sort="deadline">Deadline<span class="arrow">▼</span></th><th>Notes</th><th>Remarks</th><th>Documents</th><th>GEO / MD</th><th></th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -421,7 +427,7 @@ function init(){
   normalize(state);
   if(!state.lastUpdated) state.lastUpdated = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   document.getElementById('lastUpdated').textContent = state.lastUpdated;
-  renderAll(); bind();
+  renderAll(); bind(); detectDocs();
 }
 function nextNum(){ return state.projects.reduce((m,p)=>Math.max(m,Number(p.n)||0),0)+1; }
 
@@ -539,7 +545,7 @@ function nextCell(p,i){
 
 function renderTable(){
   const tbody=document.getElementById('tbody'), rows=visibleProjects();
-  if(!rows.length){ tbody.innerHTML=`<tr><td colspan="18" class="empty">No projects match your filters.</td></tr>`; return; }
+  if(!rows.length){ tbody.innerHTML=`<tr><td colspan="17" class="empty">No projects match your filters.</td></tr>`; return; }
   tbody.innerHTML=rows.map((p,rowIdx)=>{
     const i=state.projects.indexOf(p);
     return `<tr data-i="${i}" class="${p.status==='Cancelled'?'is-cancelled':''}">
@@ -557,8 +563,7 @@ function renderTable(){
       <td class="col-deadline"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="deadline">${esc(fmtDate(p.deadline))}</div></td>
       <td class="col-notes"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="notes">${esc(p.notes)}</div></td>
       <td class="col-remarks">${remarksCell(p,i)}</td>
-      <td class="col-link">${linkCell(p.onepager,i,'onepager')}</td>
-      <td class="col-link">${linkCell(p.deck,i,'deck')}</td>
+      <td class="col-docs">${docsCell(p,i)}</td>
       <td class="col-link">${linkCell(p.md,i,'md')}</td>
       <td class="col-actions"><button class="rowdel" data-del="${i}" title="Delete project">×</button></td>
     </tr>`;
@@ -738,6 +743,69 @@ function downloadFile(content,name,type){
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),1900); }
 
 /* ---------- linked documents (One-Pager / Presentation / MD) ---------- */
+/* ---------- project documents (one-pager / deck / ROI) ---------- */
+var DOC_KINDS = [
+  {key:'onepager', label:'1-Pager', dir:'one-pagers'},
+  {key:'deck',     label:'Deck',    dir:'presentations'},
+  {key:'roi',      label:'ROI',     dir:'roi'}
+];
+var docState = {};
+
+function slugify(t){
+  t = String(t == null ? '' : t).toLowerCase();
+  t = t.replace(/\([^)]*\)/g, ' ');
+  t = t.replace(/[^a-z0-9]+/g, '-');
+  t = t.replace(/^-/, '').replace(/-$/, '');
+  t = t.slice(0, 40);
+  return t.replace(/^-+/, '').replace(/-+$/, '');
+}
+
+function docsCell(p, i){
+  var slug = slugify(p.project);
+  var out = '';
+  for (var n = 0; n < DOC_KINDS.length; n++) {
+    var k = DOC_KINDS[n];
+    var stored = (k.key !== 'roi' && p[k.key]) ? String(p[k.key]).trim() : '';
+    var path = k.dir + '/' + slug;
+    var href = stored
+      ? (/^[a-z][a-z0-9+.-]*:/i.test(stored) ? stored : 'https://' + stored)
+      : './' + path + '.html';
+    var st = stored ? true : docState[path];
+    if (st === true) {
+      out += '<a class="docbtn" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + k.label + '</a>';
+    } else if (st === false) {
+      out += '<span class="docbtn is-off" title="Not written yet">' + k.label + '</span>';
+    } else {
+      out += '<span class="docbtn is-wait" title="Checking">' + k.label + '</span>';
+    }
+  }
+  return '<div class="docbtns">' + out + '</div>';
+}
+
+function detectDocs(){
+  if (location.protocol === 'file:') {
+    state.projects.forEach(function(p){
+      var s = slugify(p.project);
+      DOC_KINDS.forEach(function(k){ docState[k.dir + '/' + s] = true; });
+    });
+    renderTable(); return;
+  }
+  var jobs = [];
+  state.projects.forEach(function(p){
+    var s = slugify(p.project);
+    DOC_KINDS.forEach(function(k){
+      var path = k.dir + '/' + s;
+      if (docState[path] === undefined) {
+        docState[path] = null;
+        jobs.push(fetch('./' + path + '.html', {method:'HEAD', cache:'no-store'})
+          .then(function(r){ docState[path] = r.ok; })
+          .catch(function(){ docState[path] = false; }));
+      }
+    });
+  });
+  if (jobs.length) Promise.all(jobs).then(renderTable);
+}
+
 let editingLink = null;   // {i, field} - which link cell is currently in edit mode
 function linkLabel(url){
   let s = String(url||'').replace(/^https?:\/\//,'').replace(/^www\./,'');
