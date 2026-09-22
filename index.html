@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <title>TP - Project Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
 <style>
@@ -31,6 +32,8 @@ body{font-family:var(--font-primary);font-size:15px;line-height:1.6;color:var(--
 .tp-nav{position:sticky;top:0;z-index:1000;background:var(--tp-deep-purple);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 20px rgba(0,0,0,.15)}
 .tp-nav__left{display:flex;align-items:center;gap:16px}
 .tp-logo-mark{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:#fff;color:var(--tp-deep-purple);font-family:'DM Sans',sans-serif;font-weight:800;font-size:15px;letter-spacing:.5px;flex:none}
+.tp-nav__link{color:rgba(255,255,255,.82);font-size:12.5px;font-weight:600;text-decoration:none;letter-spacing:.3px;padding-left:14px;transition:color .15s}
+.tp-nav__link:hover{color:#fff}
 .tp-nav__title{color:#fff;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:2.5px;padding-left:16px;border-left:1px solid rgba(255,255,255,.25)}
 .tp-nav__actions{display:flex;gap:10px;align-items:center}
 .savechip{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-right:6px;transition:color .3s}
@@ -229,6 +232,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
   <div class="tp-nav__left">
     <div class="tp-logo-mark">TP</div>
     <span class="tp-nav__title">Project Tracker</span>
+    <a class="tp-nav__link" href="./one-pagers/index.html">One-Pagers &#8599;</a>
   </div>
   <div class="tp-nav__actions">
     <span id="saveChip" class="savechip">Autosave</span>
