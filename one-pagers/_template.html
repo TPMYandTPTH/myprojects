@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<!--
+  TP ONE-PAGER TEMPLATE
+  ---------------------------------------------------------------------------
+  HOW TO USE
+  1. Copy this file, rename it to the project slug, e.g. geo-english.html
+  2. Fill in everything marked [like this]
+  3. DELETE any section block you don't need - every section between
+     "OPTIONAL" comments can be removed without breaking the layout
+  4. Commit to  myprojects/one-pagers/  - the hub page finds it automatically
+
+  DEPTH GUIDE
+  Light   - keep Summary + Meta + Status. Nothing else.
+  Medium  - add Problem / What was built / Impact.
+  Full    - keep everything, including the Business Case block at the bottom.
+  ---------------------------------------------------------------------------
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<title>[Project Name] · TP One-Pager</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tp-deep-purple:#4A4C6A; --tp-dark-purple:#3A3C5A; --tp-rich-purple:#4C3193;
+  --tp-white:#FFFFFF; --tp-off-white:#F5F5F5; --tp-warm-gray:#D4D1CA;
+  --tp-magenta:#ED1E81; --tp-muted-purple:#706297;
+  --tp-blue-gray:#848DAC; --tp-light-gray:#C2C7CC; --tp-warm-muted:#918D80; --tp-black:#1A1A2E;
+  --st-inprogress-bg:#E8A83A; --st-inprogress-fg:#333333;
+  --st-pending-bg:#EDE7F6;   --st-pending-fg:#6F6197;
+  --st-onhold-bg:#848DAC;    --st-onhold-fg:#FFFFFF;
+  --st-closed-bg:#3AA76D;    --st-closed-fg:#FFFFFF;
+  --st-atrisk-bg:#D64545;    --st-atrisk-fg:#FFFFFF;
+  --st-live-bg:#2E9CB8;      --st-live-fg:#FFFFFF;
+  --st-cancelled-bg:#B8B3A8; --st-cancelled-fg:#3A3C5A;
+  --pr-high-bg:#D64545;      --pr-high-fg:#FFFFFF;
+  --pr-medium-bg:#E8A83A;    --pr-medium-fg:#333333;
+  --pr-low-bg:#E1EFE8;       --pr-low-fg:#2E7D5B;
+  --font-primary:'DM Sans','Calibri','Segoe UI',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font-primary);font-size:15px;line-height:1.65;color:var(--tp-black);
+  background:var(--tp-off-white);-webkit-font-smoothing:antialiased}
+
+/* ---------- top bar ---------- */
+.bar{background:var(--tp-deep-purple);padding:0 28px;height:54px;display:flex;
+  align-items:center;gap:14px}
+.bar__mark{display:flex;align-items:center;justify-content:center;width:30px;height:30px;
+  border-radius:7px;background:#fff;color:var(--tp-deep-purple);font-weight:800;font-size:13px;flex:none}
+.bar__links{margin-left:auto;display:flex;gap:18px}
+.bar a{color:rgba(255,255,255,.8);font-size:12.5px;font-weight:600;text-decoration:none;
+  letter-spacing:.3px;transition:color .15s}
+.bar a:hover{color:#fff}
+
+/* ---------- page ---------- */
+.sheet{max-width:860px;margin:30px auto 70px;background:#fff;
+  border:1px solid var(--tp-light-gray);padding:48px 56px 56px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
+  color:var(--tp-magenta);margin-bottom:12px}
+h1{font-size:33px;font-weight:700;letter-spacing:-.6px;line-height:1.15;margin-bottom:14px;
+  color:var(--tp-dark-purple)}
+.summary{font-size:17px;line-height:1.6;color:var(--tp-deep-purple);max-width:66ch}
+
+/* ---------- meta strip ---------- */
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:1px;
+  background:var(--tp-warm-gray);border:1px solid var(--tp-warm-gray);margin:30px 0 8px}
+.meta__cell{background:#fff;padding:12px 14px}
+.meta__k{font-size:9.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
+  color:var(--tp-warm-muted);margin-bottom:5px}
+.meta__v{font-size:14px;font-weight:600;color:var(--tp-black)}
+.badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;padding:4px 9px;border-radius:2px}
+.st-InProgress{background:var(--st-inprogress-bg);color:var(--st-inprogress-fg)}
+.st-Pending{background:var(--st-pending-bg);color:var(--st-pending-fg)}
+.st-OnHold{background:var(--st-onhold-bg);color:var(--st-onhold-fg)}
+.st-Live{background:var(--st-live-bg);color:var(--st-live-fg)}
+.st-AtRisk{background:var(--st-atrisk-bg);color:var(--st-atrisk-fg)}
+.st-Closed{background:var(--st-closed-bg);color:var(--st-closed-fg)}
+.st-Cancelled{background:var(--st-cancelled-bg);color:var(--st-cancelled-fg)}
+.pr-High{background:var(--pr-high-bg);color:var(--pr-high-fg)}
+.pr-Medium{background:var(--pr-medium-bg);color:var(--pr-medium-fg)}
+.pr-Low{background:var(--pr-low-bg);color:var(--pr-low-fg)}
+
+/* ---------- sections ---------- */
+h2{font-size:12px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--tp-deep-purple);margin:38px 0 14px;padding-bottom:8px;
+  border-bottom:2px solid var(--tp-warm-gray)}
+h3{font-size:14.5px;font-weight:700;color:var(--tp-dark-purple);margin:22px 0 7px}
+p{margin-bottom:13px;max-width:72ch}
+ul,ol{margin:0 0 14px 22px}
+li{margin-bottom:7px;max-width:70ch}
+strong{font-weight:700;color:var(--tp-dark-purple)}
+a{color:var(--tp-magenta)}
+
+/* ---------- next actions ---------- */
+.actions{list-style:none;margin-left:0}
+.actions li{display:flex;gap:11px;align-items:flex-start;margin-bottom:10px}
+.tag{flex:none;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  padding:3px 7px;border-radius:2px;margin-top:2px;min-width:74px;text-align:center}
+.tag--todo{background:#EDE7F6;color:#6F6197}
+.tag--doing{background:#E8A83A;color:#333}
+.tag--done{background:#3AA76D;color:#fff}
+.tag--blocked{background:#D64545;color:#fff}
+
+/* ---------- remarks ---------- */
+.remark{border-left:3px solid var(--tp-warm-gray);background:#FAFAF8;
+  padding:12px 16px;margin-bottom:10px;font-size:14px}
+.remark--problem{border-left-color:#D64545;background:#FDF5F5}
+.remark--review{border-left-color:var(--tp-rich-purple);background:#F8F6FC}
+.remark--final{border-left-color:#3AA76D;background:#F4FAF6}
+.remark__k{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  margin-bottom:4px;color:var(--tp-warm-muted)}
+
+/* ---------- scope table ---------- */
+table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px}
+th{text-align:left;font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--tp-warm-muted);padding:9px 12px;border-bottom:2px solid var(--tp-warm-gray)}
+td{padding:9px 12px;border-bottom:1px solid #EFEDE9;vertical-align:top}
+
+/* ---------- footer ---------- */
+.foot{margin-top:44px;padding-top:16px;border-top:1px solid var(--tp-warm-gray);
+  display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--tp-warm-muted)}
+.foot__mark{display:flex;align-items:center;justify-content:center;width:26px;height:26px;
+  border-radius:6px;background:var(--tp-deep-purple);color:#fff;font-weight:800;font-size:11px;flex:none}
+
+@media (max-width:720px){
+  .sheet{margin:0;padding:30px 20px 40px;border:none}
+  h1{font-size:26px} .bar{padding:0 16px}
+  .bar__links{gap:12px}
+}
+@media print{
+  body{background:#fff}
+  .bar{display:none}
+  .sheet{margin:0;padding:0;border:none;max-width:none}
+  h2{margin-top:24px}
+  a{color:var(--tp-black);text-decoration:none}
+}
+</style>
+</head>
+<body>
+
+<nav class="bar">
+  <div class="bar__mark">TP</div>
+  <div class="bar__links">
+    <a href="./index.html">All one-pagers</a>
+    <a href="../index.html">Project tracker</a>
+  </div>
+</nav>
+
+<main class="sheet">
+
+  <div class="eyebrow">[Department] &middot; [Project code or "no code"]</div>
+  <h1>[Project Name]</h1>
+  <p class="summary">[One or two sentences: what this is and why it exists. If someone
+  reads only this line, what do they need to know?]</p>
+
+  <!-- ===== META STRIP - keep this ===== -->
+  <div class="meta">
+    <div class="meta__cell">
+      <div class="meta__k">Status</div>
+      <div class="meta__v"><span class="badge st-InProgress">[In Progress]</span></div>
+    </div>
+    <div class="meta__cell">
+      <div class="meta__k">Priority</div>
+      <div class="meta__v"><span class="badge pr-High">[High]</span></div>
+    </div>
+    <div class="meta__cell">
+      <div class="meta__k">ROI</div>
+      <div class="meta__v">[TBC]</div>
+    </div>
+    <div class="meta__cell">
+      <div class="meta__k">Owner</div>
+      <div class="meta__v">[Amr Mihany]</div>
+    </div>
+    <div class="meta__cell">
+      <div class="meta__k">POC</div>
+      <div class="meta__v">[name or &mdash;]</div>
+    </div>
+    <div class="meta__cell">
+      <div class="meta__k">Started</div>
+      <div class="meta__v">[Sep 2026]</div>
+    </div>
+  </div>
+  <!-- ===== end meta strip ===== -->
+
+
+  <!-- ===== OPTIONAL: THE PROBLEM - delete this block if not needed ===== -->
+  <h2>The problem</h2>
+  <p>[What was broken, missing or manual before this existed. Be concrete - name the
+  cost: hours per week, error rate, candidates lost, money spent.]</p>
+  <!-- ===== end the problem ===== -->
+
+
+  <!-- ===== OPTIONAL: WHAT WAS BUILT - delete this block if not needed ===== -->
+  <h2>What was built</h2>
+  <p>[Plain-language description of the thing itself. What does it do when someone uses it?]</p>
+  <ul>
+    <li>[Capability or component]</li>
+    <li>[Capability or component]</li>
+    <li>[Capability or component]</li>
+  </ul>
+  <h3>How it runs</h3>
+  <p>[Stack in one line: e.g. static page on GitHub Pages, Vercel serverless function,
+  Supabase table, Google Sheet. Keep it short - this is not documentation.]</p>
+  <!-- ===== end what was built ===== -->
+
+
+  <!-- ===== OPTIONAL: IMPACT - delete this block if not needed ===== -->
+  <h2>Impact</h2>
+  <ul>
+    <li><strong>[Metric]</strong> &mdash; [before &rarr; after, or the saving]</li>
+    <li><strong>[Metric]</strong> &mdash; [before &rarr; after, or the saving]</li>
+  </ul>
+  <p>[If the numbers aren't measured yet, say so plainly rather than estimating.]</p>
+  <!-- ===== end impact ===== -->
+
+
+  <!-- ===== OPTIONAL: WHERE IT STANDS - delete this block if not needed ===== -->
+  <h2>Where it stands</h2>
+  <p>[Current stage in one sentence.]</p>
+  <ul class="actions">
+    <li><span class="tag tag--doing">In progress</span><span>[Next action]</span></li>
+    <li><span class="tag tag--todo">To do</span><span>[Next action]</span></li>
+    <li><span class="tag tag--blocked">Blocked</span><span>[What's blocking it, and on whom]</span></li>
+    <li><span class="tag tag--done">Done</span><span>[Completed step worth showing]</span></li>
+  </ul>
+  <!-- ===== end where it stands ===== -->
+
+
+  <!-- ===== OPTIONAL: FLAGS - delete this block if not needed ===== -->
+  <h2>Flags</h2>
+  <div class="remark remark--problem">
+    <div class="remark__k">Problem</div>
+    [Something genuinely wrong or at risk.]
+  </div>
+  <div class="remark remark--review">
+    <div class="remark__k">To review</div>
+    [Something needing a decision or a second opinion.]
+  </div>
+  <div class="remark remark--final">
+    <div class="remark__k">Final status</div>
+    [A settled outcome worth recording.]
+  </div>
+  <!-- ===== end flags ===== -->
+
+
+  <!-- ============================================================
+       OPTIONAL: FULL BUSINESS CASE
+       Delete this whole block for a light or medium one-pager.
+       ============================================================ -->
+
+  <h2>Background</h2>
+  <p>[How this came about - who asked, what triggered it, what came before.]</p>
+
+  <h2>Objectives</h2>
+  <ol>
+    <li>[Objective, stated so you can tell whether it was met]</li>
+    <li>[Objective]</li>
+  </ol>
+
+  <h2>Scope</h2>
+  <table>
+    <thead><tr><th style="width:50%">In scope</th><th>Out of scope</th></tr></thead>
+    <tbody>
+      <tr><td>[Item]</td><td>[Item]</td></tr>
+      <tr><td>[Item]</td><td>[Item]</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Stakeholders</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Role on this project</th></tr></thead>
+    <tbody>
+      <tr><td>[Name]</td><td>[Sponsor / approver / SME / consulted]</td></tr>
+      <tr><td>[Name]</td><td>[Role]</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Risks</h2>
+  <table>
+    <thead><tr><th style="width:45%">Risk</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td>[Risk]</td><td>[What reduces it]</td></tr>
+      <tr><td>[Risk]</td><td>[What reduces it]</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Timeline</h2>
+  <table>
+    <thead><tr><th style="width:30%">Milestone</th><th style="width:22%">Target</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>[Milestone]</td><td>[Month Year]</td><td>[Done / On track / Slipped]</td></tr>
+      <tr><td>[Milestone]</td><td>[Month Year]</td><td>[Status]</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ===== end full business case ===== -->
+
+
+  <div class="foot">
+    <div class="foot__mark">TP</div>
+    <span>TP Talent Acquisition &middot; Digital Services &amp; Transformation &middot;
+    last updated [Month Year]</span>
+  </div>
+
+</main>
+</body>
+</html>

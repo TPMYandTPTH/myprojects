@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<title>One-Pagers &middot; TP Project Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tp-deep-purple:#4A4C6A; --tp-dark-purple:#3A3C5A; --tp-rich-purple:#4C3193;
+  --tp-off-white:#F5F5F5; --tp-warm-gray:#D4D1CA; --tp-magenta:#ED1E81;
+  --tp-light-gray:#C2C7CC; --tp-warm-muted:#918D80; --tp-black:#1A1A2E;
+  --st-inprogress-bg:#E8A83A; --st-inprogress-fg:#333333;
+  --st-pending-bg:#EDE7F6;   --st-pending-fg:#6F6197;
+  --st-onhold-bg:#848DAC;    --st-onhold-fg:#FFFFFF;
+  --st-closed-bg:#3AA76D;    --st-closed-fg:#FFFFFF;
+  --st-atrisk-bg:#D64545;    --st-atrisk-fg:#FFFFFF;
+  --st-live-bg:#2E9CB8;      --st-live-fg:#FFFFFF;
+  --st-nostatus-bg:#E4E2DC;  --st-nostatus-fg:#5A5647;
+  --st-cancelled-bg:#B8B3A8; --st-cancelled-fg:#3A3C5A;
+  --font-primary:'DM Sans','Calibri','Segoe UI',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font-primary);font-size:15px;line-height:1.6;color:var(--tp-black);
+  background:var(--tp-off-white);-webkit-font-smoothing:antialiased}
+.bar{background:var(--tp-deep-purple);padding:0 28px;height:54px;display:flex;align-items:center;gap:14px}
+.bar__mark{display:flex;align-items:center;justify-content:center;width:30px;height:30px;
+  border-radius:7px;background:#fff;color:var(--tp-deep-purple);font-weight:800;font-size:13px;flex:none}
+.bar__t{color:#fff;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:2px;
+  padding-left:14px;border-left:1px solid rgba(255,255,255,.25)}
+.bar__links{margin-left:auto;display:flex;gap:18px}
+.bar a{color:rgba(255,255,255,.8);font-size:12.5px;font-weight:600;text-decoration:none}
+.bar a:hover{color:#fff}
+header{background:var(--tp-dark-purple);color:#fff;padding:34px 28px}
+header h1{font-size:28px;font-weight:700;letter-spacing:-.4px}
+header p{font-size:13.5px;opacity:.75;margin-top:7px;max-width:70ch}
+.tools{background:#fff;border-bottom:1px solid var(--tp-light-gray);padding:14px 28px;
+  display:flex;gap:14px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+.tools input[type=text]{font-family:inherit;font-size:14px;padding:8px 12px;
+  border:1px solid var(--tp-light-gray);border-radius:3px;min-width:240px;outline:none}
+.tools input[type=text]:focus{border-color:var(--tp-rich-purple)}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--tp-deep-purple);cursor:pointer}
+.count{margin-left:auto;font-size:12px;color:var(--tp-warm-muted)}
+.wrap{padding:26px 28px 70px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--tp-light-gray);padding:17px 19px;
+  display:flex;flex-direction:column;gap:9px;transition:box-shadow .15s,border-color .15s}
+.card--live:hover{border-color:var(--tp-magenta);box-shadow:0 3px 14px rgba(0,0,0,.07)}
+.card--none{opacity:.58;border-style:dashed}
+.card__top{display:flex;align-items:flex-start;gap:9px}
+.card__name{font-size:15.5px;font-weight:700;color:var(--tp-dark-purple);line-height:1.35;flex:1}
+.card__code{font-size:10.5px;font-weight:600;letter-spacing:.5px;color:var(--tp-warm-muted)}
+.badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;padding:3px 8px;border-radius:2px;flex:none}
+.st-InProgress{background:var(--st-inprogress-bg);color:var(--st-inprogress-fg)}
+.st-Pending{background:var(--st-pending-bg);color:var(--st-pending-fg)}
+.st-OnHold{background:var(--st-onhold-bg);color:var(--st-onhold-fg)}
+.st-Live{background:var(--st-live-bg);color:var(--st-live-fg)}
+.st-AtRisk{background:var(--st-atrisk-bg);color:var(--st-atrisk-fg)}
+.st-NoStatus{background:var(--st-nostatus-bg);color:var(--st-nostatus-fg)}
+.st-Closed{background:var(--st-closed-bg);color:var(--st-closed-fg)}
+.st-Cancelled{background:var(--st-cancelled-bg);color:var(--st-cancelled-fg)}
+.card__foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding-top:3px}
+.open{font-size:12.5px;font-weight:700;color:var(--tp-magenta);text-decoration:none;
+  border:1px solid var(--tp-magenta);border-radius:4px;padding:5px 13px;transition:.15s}
+.open:hover{background:var(--tp-magenta);color:#fff}
+.none{font-size:12px;color:var(--tp-warm-muted);font-style:italic}
+.fname{font-size:10.5px;color:var(--tp-light-gray);margin-left:auto;font-weight:600}
+.checking{font-size:12px;color:var(--tp-warm-muted)}
+.note{background:#FFF8FB;border:1px solid #F6D8E7;border-left:3px solid var(--tp-magenta);
+  padding:14px 18px;margin-bottom:20px;font-size:13.5px;line-height:1.6;color:#5A5C74}
+.note b{color:var(--tp-dark-purple)}
+.note code{background:#F0EEEA;padding:1px 5px;border-radius:2px;font-size:12.5px}
+@media (max-width:640px){
+  .bar,.tools,.wrap,header{padding-left:16px;padding-right:16px}
+  .bar__t{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav class="bar">
+  <div class="bar__mark">TP</div>
+  <span class="bar__t">One-Pagers</span>
+  <div class="bar__links">
+    <a href="../index.html">Project tracker</a>
+    <a href="./_template.html">Template</a>
+  </div>
+</nav>
+
+<header>
+  <h1>Project One-Pagers</h1>
+  <p>Every project brief, as an HTML page in this repo. Drop a new file into
+  <code style="background:rgba(255,255,255,.15);padding:1px 5px;border-radius:2px">one-pagers/</code>
+  named after the project slug and it appears here automatically.</p>
+</header>
+
+<div class="tools">
+  <input type="text" id="q" placeholder="Search projects...">
+  <label class="chk"><input type="checkbox" id="only"> Written only</label>
+  <span class="count" id="count">checking...</span>
+</div>
+
+<div class="wrap">
+  <div class="note">
+    <b>How this page works</b> &mdash; it checks for each file and shows a link only when the
+    file really exists, so nothing here 404s. To add one: copy <code>_template.html</code>,
+    rename it to the filename shown on the card, fill it in, commit.
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const PROJECTS = [
+ {
+  "slug": "tp-recruit-unified-recruitment-platform",
+  "name": "tp-recruit - Unified Recruitment Platform",
+  "code": "",
+  "status": "Cancelled",
+  "cat": "Recruiting",
+  "sc": "st-Cancelled"
+ },
+ {
+  "slug": "raf-dashboard",
+  "name": "RAF Dashboard (Referral Awareness Form)",
+  "code": "",
+  "status": "Cancelled",
+  "cat": "Recruiting",
+  "sc": "st-Cancelled"
+ },
+ {
+  "slug": "xraf-external-referral-portal",
+  "name": "xRAF - External Referral Portal",
+  "code": "",
+  "status": "Live",
+  "cat": "Recruiting",
+  "sc": "st-Live"
+ },
+ {
+  "slug": "ga4-multi-property-analytics-dashboard",
+  "name": "GA4 Multi-Property Analytics Dashboard",
+  "code": "",
+  "status": "In Progress",
+  "cat": "Recruiting",
+  "sc": "st-InProgress"
+ },
+ {
+  "slug": "tp-malaysia-line-bot",
+  "name": "TP Malaysia LINE Bot",
+  "code": "",
+  "status": "Live",
+  "cat": "Recruiting",
+  "sc": "st-Live"
+ },
+ {
+  "slug": "elp-english-landing-page",
+  "name": "ELP - English Landing Page",
+  "code": "",
+  "status": "Pending",
+  "cat": "Recruiting",
+  "sc": "st-Pending"
+ },
+ {
+  "slug": "tlp-thai-landing-page",
+  "name": "TLP - Thai Landing Page",
+  "code": "",
+  "status": "Live",
+  "cat": "Recruiting",
+  "sc": "st-Live"
+ },
+ {
+  "slug": "jlp-japanese-landing-page",
+  "name": "JLP - Japanese Landing Page",
+  "code": "",
+  "status": "Pending",
+  "cat": "Recruiting",
+  "sc": "st-Pending"
+ },
+ {
+  "slug": "joomla-yootheme-intranet-enhancements",
+  "name": "Joomla/YOOtheme Intranet Enhancements",
+  "code": "",
+  "status": "On Hold",
+  "cat": "Chief of Staff",
+  "sc": "st-OnHold"
+ },
+ {
+  "slug": "raf-agency-trace-phase-1",
+  "name": "RAF + Agency Trace - Phase 1",
+  "code": "",
+  "status": "Closed",
+  "cat": "Recruiting",
+  "sc": "st-Closed"
+ },
+ {
+  "slug": "tp-thailand-line-bot",
+  "name": "TP Thailand LINE Bot",
+  "code": "RE-2026-042",
+  "status": "Cancelled",
+  "cat": "Recruiting",
+  "sc": "st-Cancelled"
+ },
+ {
+  "slug": "klp-korean-landing-page",
+  "name": "KLP - Korean Landing Page",
+  "code": "RE-2026-043",
+  "status": "Live",
+  "cat": "Recruiting",
+  "sc": "st-Live"
+ },
+ {
+  "slug": "mlp-mandarin-landing-page",
+  "name": "MLP - Mandarin Landing Page",
+  "code": "RE-2026-044",
+  "status": "Closed",
+  "cat": "Recruiting",
+  "sc": "st-Closed"
+ },
+ {
+  "slug": "raf-referral-programme",
+  "name": "RAF - Referral Programme",
+  "code": "",
+  "status": "Live",
+  "cat": "Recruiting",
+  "sc": "st-Live"
+ },
+ {
+  "slug": "landing-pages-live-maintenance",
+  "name": "Landing Pages - Live Maintenance",
+  "code": "",
+  "status": "Live",
+  "cat": "Recruiting",
+  "sc": "st-Live"
+ },
+ {
+  "slug": "geo-english",
+  "name": "GEO - English (ELP)",
+  "code": "",
+  "status": "In Progress",
+  "cat": "Recruiting",
+  "sc": "st-InProgress"
+ },
+ {
+  "slug": "geo-thai",
+  "name": "GEO - Thai (TLP)",
+  "code": "",
+  "status": "In Progress",
+  "cat": "Recruiting",
+  "sc": "st-InProgress"
+ },
+ {
+  "slug": "geo-japanese",
+  "name": "GEO - Japanese (JLP)",
+  "code": "",
+  "status": "In Progress",
+  "cat": "Recruiting",
+  "sc": "st-InProgress"
+ },
+ {
+  "slug": "geo-korean",
+  "name": "GEO - Korean (KLP)",
+  "code": "",
+  "status": "In Progress",
+  "cat": "Recruiting",
+  "sc": "st-InProgress"
+ },
+ {
+  "slug": "geo-mandarin",
+  "name": "GEO - Mandarin (MLP)",
+  "code": "",
+  "status": "In Progress",
+  "cat": "Recruiting",
+  "sc": "st-InProgress"
+ },
+ {
+  "slug": "chatbot-knowledge-base",
+  "name": "Chatbot Knowledge Base (FAQ Bot)",
+  "code": "",
+  "status": "In Progress",
+  "cat": "Recruiting",
+  "sc": "st-InProgress"
+ },
+ {
+  "slug": "sanas-deployment",
+  "name": "Sanas - Deployment",
+  "code": "",
+  "status": "In Progress",
+  "cat": "Client Operations",
+  "sc": "st-InProgress"
+ }
+];
+
+const grid=document.getElementById('grid'), cnt=document.getElementById('count');
+const qEl=document.getElementById('q'), onlyEl=document.getElementById('only');
+const isFile = location.protocol === 'file:';
+let state = PROJECTS.map(p => ({...p, exists: isFile ? true : null}));
+
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function render(){
+  const q=qEl.value.trim().toLowerCase(), only=onlyEl.checked;
+  const rows=state.filter(p=>{
+    if(only && p.exists!==true) return false;
+    if(q && !(p.name+' '+p.code+' '+p.cat+' '+p.status).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(!rows.length){ grid.innerHTML='<p style="color:#918D80">Nothing matches.</p>'; return; }
+  grid.innerHTML=rows.map(p=>{
+    const file=p.slug+'.html';
+    let foot;
+    if(p.exists===true)      foot=`<a class="open" href="./${esc(file)}">Open &#8599;</a>`;
+    else if(p.exists===false) foot=`<span class="none">Not written yet</span>`;
+    else                      foot=`<span class="checking">checking...</span>`;
+    return `<div class="card ${p.exists===true?'card--live':p.exists===false?'card--none':''}">
+      <div class="card__top">
+        <div class="card__name">${esc(p.name)}</div>
+        <span class="badge ${esc(p.sc)}">${esc(p.status)}</span>
+      </div>
+      ${p.code?`<div class="card__code">${esc(p.code)}</div>`:''}
+      <div class="card__foot">${foot}<span class="fname">${esc(file)}</span></div>
+    </div>`;
+  }).join('');
+  const have=state.filter(p=>p.exists===true).length;
+  const pend=state.filter(p=>p.exists===null).length;
+  cnt.textContent = pend ? 'checking '+pend+'...'
+    : have+' of '+state.length+' written';
+}
+
+async function detect(){
+  if(isFile){ render(); cnt.textContent='opened as a local file - links shown unchecked'; return; }
+  render();
+  await Promise.all(state.map(async p=>{
+    try{
+      const r=await fetch('./'+p.slug+'.html',{method:'HEAD',cache:'no-store'});
+      p.exists = r.ok;
+    }catch(e){ p.exists=false; }
+  }));
+  render();
+}
+
+qEl.addEventListener('input',render);
+onlyEl.addEventListener('change',render);
+detect();
+</script>
+</body>
+</html>
