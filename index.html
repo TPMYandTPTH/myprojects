@@ -24,6 +24,7 @@
   --pr-low-bg:#E1EFE8;       --pr-low-fg:#2E7D5B;
   --font-primary:'DM Sans','Calibri','Segoe UI',system-ui,sans-serif;
   --transition-base:0.3s ease; --transition-fast:0.2s ease;
+  --stick-toolbar:64px; --stick-head:124px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -46,67 +47,98 @@ body{font-family:var(--font-primary);font-size:15px;line-height:1.6;color:var(--
 .btn--ghost:hover{background:rgba(255,255,255,.12);border-color:#fff}
 .btn--sm{padding:7px 12px;font-size:11px}
 
-.header{background:var(--tp-deep-purple);color:#fff;padding:36px 32px 30px;position:relative}
+.header{background:var(--tp-deep-purple);color:#fff;padding:24px 32px 20px;position:relative}
 .header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--tp-magenta),var(--tp-rich-purple))}
 .header__label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:var(--tp-magenta);margin-bottom:10px}
-.header__title{font-size:34px;font-weight:700;line-height:1.1}
-.header__meta{margin-top:10px;font-size:13px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.header__title{font-size:26px;font-weight:700;line-height:1.15;letter-spacing:-.4px}
+.header__meta{margin-top:7px;font-size:12.5px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.statstog{background:none;border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.82);font-family:inherit;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;cursor:pointer;margin-left:6px;transition:all .18s}
+.statstog:hover{border-color:#fff;color:#fff}
+#headerStats.is-hidden{display:none}
 .header__meta [contenteditable]{outline:none;border-bottom:1px dashed rgba(255,255,255,.4);padding:0 2px;min-width:20px;color:#fff}
 .header__meta [contenteditable]:focus{border-bottom-color:var(--tp-magenta)}
 
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:26px;max-width:920px}
-.stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:16px 18px;cursor:pointer;transition:all .25s}
-.stat:hover{background:rgba(255,255,255,.12)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin-top:16px;max-width:1240px}
+.stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:9px 11px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:9px;min-width:0}
+.stat:hover{background:rgba(255,255,255,.14)}
 .stat.active{background:#fff;border-color:#fff}
 .stat.active .stat__num,.stat.active .stat__lbl{color:var(--tp-deep-purple)}
-.stat__num{font-size:38px;font-weight:700;line-height:1;color:#fff}
-.stat__lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.4px;color:rgba(255,255,255,.7);margin-top:8px;display:flex;align-items:center;gap:7px}
-.stat__dot{width:9px;height:9px;border-radius:50%;flex:none}
+.stat__num{font-size:21px;font-weight:700;line-height:1;color:#fff;flex:none;min-width:20px}
+.stat__lbl{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.72);margin-top:0;display:flex;align-items:center;gap:6px;line-height:1.3;min-width:0}
+.stat__dot{width:7px;height:7px;border-radius:50%;flex:none}
 
-.distro{margin-top:22px;max-width:920px}
-.distro__track{display:flex;height:12px;width:100%;overflow:hidden;background:rgba(255,255,255,.08)}
+.distro{margin-top:14px;max-width:1240px}
+.distro__track{display:flex;height:7px;width:100%;overflow:hidden;background:rgba(255,255,255,.08)}
 .distro__seg{height:100%;transition:width .4s ease}
-.distro__legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:12px;color:rgba(255,255,255,.8)}
+.distro__legend{display:flex;flex-wrap:wrap;gap:6px 15px;margin-top:9px;font-size:11px;color:rgba(255,255,255,.78)}
 .distro__legend span{display:inline-flex;align-items:center;gap:6px}
 .distro__legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
 
-.toolbar{background:#fff;border-bottom:1px solid var(--tp-light-gray);padding:16px 32px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;position:sticky;top:113px;z-index:900}
+.toolbar{background:#fff;border-bottom:1px solid var(--tp-light-gray);padding:11px 32px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;position:sticky;top:var(--stick-toolbar);z-index:900;box-shadow:0 1px 0 rgba(0,0,0,.04)}
 .search{flex:1;min-width:200px;position:relative}
-.search input{width:100%;padding:10px 14px 10px 38px;border:1.5px solid var(--tp-light-gray);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
+.search input{width:100%;padding:9px 14px 9px 38px;border:1.5px solid var(--tp-light-gray);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
 .search input:focus{border-color:var(--tp-rich-purple)}
 .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--tp-warm-muted)}
 .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .filter-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--tp-warm-muted);margin-right:2px}
-select.pfilter{padding:9px 12px;border:1.5px solid var(--tp-light-gray);font-family:inherit;font-size:13px;background:#fff;cursor:pointer;outline:none;max-width:170px}
+select.pfilter{padding:8px 11px;border:1.5px solid var(--tp-light-gray);font-family:inherit;font-size:12.5px;background:#fff;cursor:pointer;outline:none;max-width:160px}
 select.pfilter:focus{border-color:var(--tp-rich-purple)}
 
-.wrap{padding:24px 32px 60px}
-.tablecard{background:#fff;border:1px solid var(--tp-light-gray);overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:1500px}
-thead th{background:var(--tp-deep-purple);color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;text-align:left;padding:14px 12px;position:sticky;top:0;white-space:nowrap}
-tbody td{border-bottom:1px solid #ececf1;padding:10px 12px;vertical-align:top;font-size:13.5px}
-tbody tr:hover{background:#faf9fc}
+.wrap{padding:18px 32px 60px}
+.tablecard{background:#fff;border:1px solid var(--tp-light-gray)}
+table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:1290px}
+thead th{background:var(--tp-deep-purple);color:#fff;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.9px;text-align:left;padding:11px 10px;position:sticky;top:var(--stick-head);z-index:800;white-space:nowrap}
+tbody td{border-bottom:1px solid #ececf1;padding:8px 10px;vertical-align:middle;font-size:13.5px}
+tbody tr.main:hover > td{background:#faf9fc}
 tbody tr:last-child td{border-bottom:none}
-td.num{font-weight:700;color:var(--tp-deep-purple);width:44px;text-align:center}
+td.num{font-weight:700;color:var(--tp-blue-gray);font-size:12px;text-align:center;font-variant-numeric:tabular-nums}
+td.col-tog{text-align:center;padding:0}
+/* expand control */
+.rowtog{background:none;border:none;cursor:pointer;color:var(--tp-blue-gray);font-size:10px;line-height:1;padding:10px 6px;transition:transform .18s ease,color .18s;display:block;margin:0 auto}
+.rowtog:hover{color:var(--tp-magenta)}
+tr.is-open .rowtog{transform:rotate(90deg);color:var(--tp-magenta)}
+tr.main.is-open > td{background:#F6F4FC}
+tr.main.has-problem > td:first-child{box-shadow:inset 3px 0 0 var(--st-atrisk-bg)}
+/* project cell */
+.pname{font-weight:600;color:var(--tp-deep-purple);font-size:14px;line-height:1.3}
+.pstage{font-size:12px;color:var(--tp-warm-muted);line-height:1.45;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help}
+.pmeta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px}
+.chip{display:inline-flex;align-items:center;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:2px;white-space:nowrap;line-height:1.5}
+.chip--code{background:#EFEDF7;color:var(--tp-muted-purple)}
+.chip--act{background:#F0EEE9;color:#7D786B}
+.chip--act.is-all{background:#E1EFE8;color:#2E7D5B}
+.chip--prob{background:#FBE4E4;color:#B33A3A}
+.chip--rev{background:#EDE7F6;color:#6F6197}
+.chip--plain{background:#F2F1EE;color:#918D80;cursor:help}
+/* detail panel */
+tr.detail > td{padding:0;background:#F6F4FC;border-bottom:1px solid #E3DFF0}
+.detail-inner{padding:16px 22px 20px 52px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 28px;align-items:start}
+.dcol{display:flex;flex-direction:column;gap:14px;min-width:0}
+.dblock{min-width:0}
+.dblock h4{font-size:9.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--tp-muted-purple);margin:0 0 6px}
+.dfield{background:#fff;border:1px solid #E3DFF0;padding:9px 11px;font-size:13.5px;line-height:1.55;min-height:38px}
+.cell-edit.dfield:hover{background:#fff;border-color:var(--tp-warm-gray)}
+.cell-edit.dfield:focus{background:#fff;border-color:transparent}
+.dbox{background:#fff;border:1px solid #E3DFF0;padding:10px 12px}
+.dstatic{font-size:13.5px;color:var(--tp-warm-muted);padding:9px 0;font-variant-numeric:tabular-nums}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .cell-edit{outline:none;min-height:20px;border-radius:2px;transition:background .15s;cursor:text}
 .cell-edit:hover{background:#f3f0f9}
 .cell-edit:focus{background:#fff;box-shadow:0 0 0 2px var(--tp-rich-purple) inset}
 .cell-edit:empty::before{content:'-';color:#c9c9d4}
-.col-project{min-width:200px;font-weight:600;color:var(--tp-deep-purple)}
-.col-category{min-width:130px}
-.col-roi{min-width:110px;max-width:160px}
-.col-stage,.col-notes{min-width:210px;max-width:300px}
-.col-remarks{min-width:230px;max-width:320px}
-.col-next{min-width:290px;max-width:360px}
-.col-owner{min-width:120px}
-.col-poc{min-width:120px}
-.col-deadline,.col-created{min-width:96px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.col-created{color:var(--tp-warm-muted);font-size:12.5px}
-.pcode{display:block;font-size:10.5px;font-weight:600;letter-spacing:.6px;color:var(--tp-warm-muted);margin-top:3px}
-.col-link{min-width:180px;max-width:230px}
-.col-docs{min-width:196px}
-.docbtns{display:flex;gap:5px;flex-wrap:wrap}
-.docbtn{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:4px 9px;border-radius:3px;text-decoration:none;white-space:nowrap;border:1px solid var(--tp-magenta);color:var(--tp-magenta);background:#fff;transition:var(--transition-fast)}
+colgroup .c-tog{width:36px}colgroup .c-num{width:38px}colgroup .c-dept{width:120px}
+colgroup .c-status{width:120px}colgroup .c-prio{width:96px}colgroup .c-roi{width:110px}
+colgroup .c-owner{width:116px}colgroup .c-created{width:98px}colgroup .c-deadline{width:98px}
+colgroup .c-docs{width:180px}colgroup .c-del{width:38px}
+.col-project{min-width:0}
+.col-category,.col-owner{overflow:hidden;text-overflow:ellipsis}
+.col-roi{font-variant-numeric:tabular-nums}
+.col-deadline,.col-created{white-space:nowrap;font-variant-numeric:tabular-nums;font-size:12.5px}
+.col-created{color:var(--tp-warm-muted)}
+.col-link{min-width:0}
+.col-docs{min-width:0}
+.docbtns{display:flex;gap:4px;flex-wrap:nowrap}
+.docbtn{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:4px 7px;border-radius:3px;text-decoration:none;white-space:nowrap;border:1px solid var(--tp-magenta);color:var(--tp-magenta);background:#fff;transition:var(--transition-fast)}
 a.docbtn:hover{background:var(--tp-magenta);color:#fff}
 .docbtn.is-off{border-color:#E2E0DB;color:#BFBDB7;background:#FAFAF9;cursor:default}
 .docbtn.is-wait{border-color:#E2E0DB;color:#D6D4CF;background:#fff;cursor:default}
@@ -175,7 +207,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
 .plain-select:hover{border-color:var(--tp-warm-gray)}
 .plain-select:focus{outline:none;border-color:var(--tp-magenta);background:#fff}
 
-.badge-select{border:none;font-family:inherit;font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer;outline:none;text-transform:uppercase;letter-spacing:.5px;-webkit-appearance:none;appearance:none;border-radius:2px;text-align:center}
+.badge-select{border:none;font-family:inherit;font-size:11px;font-weight:700;padding:5px 7px;width:100%;cursor:pointer;outline:none;text-transform:uppercase;letter-spacing:.5px;-webkit-appearance:none;appearance:none;border-radius:2px;text-align:center}
 .st-InProgress{background:var(--st-inprogress-bg);color:var(--st-inprogress-fg)}
 .st-Pending{background:var(--st-pending-bg);color:var(--st-pending-fg)}
 .st-OnHold{background:var(--st-onhold-bg);color:var(--st-onhold-fg)}
@@ -223,12 +255,20 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--tp-black);color:#fff;padding:13px 22px;font-size:13px;font-weight:600;letter-spacing:.5px;opacity:0;pointer-events:none;transition:all .3s;z-index:2000;box-shadow:0 8px 30px rgba(0,0,0,.3)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+@media (max-width:1380px){
+  .tablecard{overflow-x:auto}
+  thead th{position:static}
+}
+@media (max-width:1040px){
+  .detail-inner{grid-template-columns:minmax(0,1fr);padding:14px 16px 18px 16px;gap:14px}
+}
 @media (max-width:760px){
   .tp-nav{padding:0 16px;height:auto;flex-direction:column;gap:10px;padding-top:12px;padding-bottom:12px}
-  .header{padding:26px 18px}.header__title{font-size:26px}
-  .toolbar{padding:14px 16px;top:0;position:static}
-  .wrap{padding:18px 12px 50px}
+  .header{padding:20px 16px 16px}.header__title{font-size:22px}
+  .toolbar{padding:12px 16px;top:0;position:static}
+  .wrap{padding:14px 10px 50px}
   .tp-nav__actions{flex-wrap:wrap;justify-content:center}
+  .stats{grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px}
 }
 </style>
 </head>
@@ -256,7 +296,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
 <header class="header">
   <div class="header__label">COS Automation</div>
   <div class="header__title">My Project Portfolio</div>
-  <div class="header__meta">Last updated: <span id="lastUpdated" contenteditable="true">14 September 2026</span> · <span id="projCount">0</span> projects tracked</div>
+  <div class="header__meta">Last updated: <span id="lastUpdated" contenteditable="true">14 September 2026</span> · <span id="projCount">0</span> projects tracked<button class="statstog" id="btnStats">Hide summary</button></div>
 
   <div id="headerStats">
     <div class="stats" id="stats"></div>
@@ -291,6 +331,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
     <select class="pfilter" id="filterCat"><option value="">All</option></select>
     <span class="filter-label">POC</span>
     <select class="pfilter" id="filterPoc"><option value="">All</option></select>
+    <button class="btn btn--sm" id="btnExpand" style="background:var(--tp-off-white);color:var(--tp-dark-purple);border:1.5px solid var(--tp-light-gray)">Expand all</button>
     <button class="btn btn--sm" id="btnClear" style="background:var(--tp-warm-gray);color:var(--tp-dark-purple)">Clear</button>
   </div>
 </div>
@@ -299,10 +340,12 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
   <div id="paneProjects">
   <div class="tablecard">
     <table>
+      <colgroup>
+        <col class="c-tog"><col class="c-num"><col class="c-project"><col class="c-dept"><col class="c-status"><col class="c-prio"><col class="c-roi"><col class="c-owner"><col class="c-created"><col class="c-deadline"><col class="c-docs"><col class="c-del">
+      </colgroup>
       <thead>
         <tr>
-          <th data-sort="n">#<span class="arrow">▼</span></th><th data-sort="project">Project<span class="arrow">▼</span></th><th data-sort="category">Department<span class="arrow">▼</span></th><th data-sort="status">Status<span class="arrow">▼</span></th><th data-sort="priority">Priority<span class="arrow">▼</span></th><th data-sort="roi">ROI<span class="arrow">▼</span></th>
-          <th>Current Stage</th><th>Next Action</th><th data-sort="owner">Owner<span class="arrow">▼</span></th><th data-sort="poc">POC<span class="arrow">▼</span></th><th data-sort="created">Created<span class="arrow">▼</span></th><th data-sort="deadline">Deadline<span class="arrow">▼</span></th><th>Notes</th><th>Remarks</th><th>Documents</th><th>GEO / MD</th><th></th>
+          <th></th><th data-sort="n">#<span class="arrow">▼</span></th><th data-sort="project">Project<span class="arrow">▼</span></th><th data-sort="category">Dept<span class="arrow">▼</span></th><th data-sort="status">Status<span class="arrow">▼</span></th><th data-sort="priority">Priority<span class="arrow">▼</span></th><th data-sort="roi">ROI<span class="arrow">▼</span></th><th data-sort="owner">Owner<span class="arrow">▼</span></th><th data-sort="created">Created<span class="arrow">▼</span></th><th data-sort="deadline">Deadline<span class="arrow">▼</span></th><th>Documents</th><th></th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -312,7 +355,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
 
 <footer class="tp-footer">
   <div class="tp-logo-mark">TP</div>
-  <span class="tp-footer__txt">TP Project Tracker · edits save automatically to this browser · use Backup to export a copy</span>
+  <span class="tp-footer__txt">TP Project Tracker · click ▶ on a row for stage, actions, remarks and notes · edits save automatically to this browser · use Backup to export a copy</span>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -357,6 +400,9 @@ const SEED = [
 let state = { lastUpdated:'14 September 2026', projects: [], pipeline: [], log: [], huddle: null };
 let filters = { search:'', status:'', priority:'', poc:'', cat:'', owner:'' };
 let sort = { key:'created', dir:-1 };
+const openRows = new Set();          // project .n values whose detail panel is expanded
+const UI_KEY = 'tp_tracker_ui_v1';
+let ui = { statsOpen:true };
 
 /* ---------- date helpers ---------- */
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -421,13 +467,22 @@ function normalize(st){
 }
 
 /* ---------- init ---------- */
+function loadUi(){ try{ const r=localStorage.getItem(UI_KEY); if(r){ const o=JSON.parse(r); if(o&&typeof o.statsOpen==='boolean') ui.statsOpen=o.statsOpen; } }catch(e){} }
+function saveUi(){ try{ localStorage.setItem(UI_KEY, JSON.stringify(ui)); }catch(e){} }
+function applyUi(){
+  const box=document.getElementById('headerStats'), b=document.getElementById('btnStats');
+  if(box) box.classList.toggle('is-hidden', !ui.statsOpen);
+  if(b) b.textContent = ui.statsOpen ? 'Hide summary' : 'Show summary';
+}
+
 function init(){
+  loadUi();
   const stored=load();
   state = stored ? stored : { lastUpdated:'', projects: JSON.parse(JSON.stringify(SEED)) };
   normalize(state);
   if(!state.lastUpdated) state.lastUpdated = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   document.getElementById('lastUpdated').textContent = state.lastUpdated;
-  renderAll(); bind(); detectDocs();
+  applyUi(); renderAll(); bind(); detectDocs();
 }
 function nextNum(){ return state.projects.reduce((m,p)=>Math.max(m,Number(p.n)||0),0)+1; }
 
@@ -543,31 +598,97 @@ function nextCell(p,i){
   return `<div class="subitems">${rows}${prog}<button class="sub-add" data-addsub="${i}">+ action</button></div>`;
 }
 
+const COLSPAN = 12;
+
+function rowKey(p){ return String(p.n==null?'':p.n); }
+
+/* what the collapsed row needs to advertise about the hidden detail */
+function projFlags(p){
+  const next=(Array.isArray(p.next)?p.next:[]).filter(it=>String(it.text||'').trim());
+  const rems=(Array.isArray(p.remarks)?p.remarks:[]).filter(r=>String(r.text||'').trim());
+  const probs=rems.filter(r=>r.type==='Problem');
+  const revs=rems.filter(r=>r.type==='To Review');
+  return {
+    acts:next.length,
+    done:next.filter(it=>it.status==='Done').length,
+    prob:probs.length, probText:probs.length?probs[0].text:'',
+    rev:revs.length, revText:revs.length?revs[0].text:'',
+    stage:String(p.stage||'').trim(),
+    notes:String(p.notes||'').trim()
+  };
+}
+
+function projectCell(p,i){
+  const f=projFlags(p);
+  let chips='';
+  if(p.code) chips+=`<span class="chip chip--code">${esc(p.code)}</span>`;
+  if(f.acts) chips+=`<span class="chip chip--act ${f.done===f.acts?'is-all':''}">${f.done}/${f.acts} done</span>`;
+  if(f.prob) chips+=`<span class="chip chip--prob" title="${esc(f.probText)}">${f.prob} problem${f.prob>1?'s':''}</span>`;
+  if(f.rev) chips+=`<span class="chip chip--rev" title="${esc(f.revText)}">${f.rev} to review</span>`;
+  if(f.notes) chips+=`<span class="chip chip--plain" title="${esc(f.notes)}">notes</span>`;
+  const stageLine = f.stage ? `<div class="pstage" title="${esc(f.stage)}">${esc(f.stage)}</div>` : '';
+  return `<td class="col-project"><div class="cell-edit pname" contenteditable="true" data-i="${i}" data-f="project">${esc(p.project)}</div>`+
+    stageLine+(chips?`<div class="pmeta">${chips}</div>`:'')+`</td>`;
+}
+
+function detailRow(p,i){
+  return `<tr class="detail" data-detail="${esc(rowKey(p))}"><td colspan="${COLSPAN}"><div class="detail-inner">
+    <div class="dcol">
+      <div class="dblock"><h4>Current stage</h4>
+        <div class="cell-edit dfield" contenteditable="true" data-i="${i}" data-f="stage">${esc(p.stage)}</div></div>
+      <div class="dblock"><h4>Next actions</h4>
+        <div class="dbox dbox--act">${nextCell(p,i)}</div></div>
+      <div class="dblock"><h4>Notes</h4>
+        <div class="cell-edit dfield" contenteditable="true" data-i="${i}" data-f="notes">${esc(p.notes)}</div></div>
+    </div>
+    <div class="dcol">
+      <div class="dblock"><h4>Remarks</h4>
+        <div class="dbox dbox--rem">${remarksCell(p,i)}</div></div>
+      <div class="dgrid">
+        <div class="dblock"><h4>POC</h4>
+          <div class="cell-edit dfield" contenteditable="true" data-i="${i}" data-f="poc">${esc(p.poc)}</div></div>
+        <div class="dblock"><h4>Created</h4>
+          <div class="dstatic">${esc(fmtDateTime(p.created))||'-'}</div></div>
+      </div>
+      <div class="dblock"><h4>GEO / MD link</h4>${linkCell(p.md,i,'md')}</div>
+    </div>
+  </div></td></tr>`;
+}
+
 function renderTable(){
   const tbody=document.getElementById('tbody'), rows=visibleProjects();
-  if(!rows.length){ tbody.innerHTML=`<tr><td colspan="17" class="empty">No projects match your filters.</td></tr>`; return; }
+  if(!rows.length){ tbody.innerHTML=`<tr><td colspan="${COLSPAN}" class="empty">No projects match your filters.</td></tr>`; syncExpandBtn(0); return; }
+  let open=0;
   tbody.innerHTML=rows.map((p,rowIdx)=>{
-    const i=state.projects.indexOf(p);
-    return `<tr data-i="${i}" class="${p.status==='Cancelled'?'is-cancelled':''}">
+    const i=state.projects.indexOf(p), k=rowKey(p), isOpen=openRows.has(k);
+    if(isOpen) open++;
+    const f=projFlags(p);
+    const cls=['main'];
+    if(p.status==='Cancelled') cls.push('is-cancelled');
+    if(isOpen) cls.push('is-open');
+    if(f.prob) cls.push('has-problem');
+    const main=`<tr data-i="${i}" data-key="${esc(k)}" class="${cls.join(' ')}">
+      <td class="col-tog"><button class="rowtog" data-rowtog="${esc(k)}" title="${isOpen?'Collapse details':'Expand details'}" aria-expanded="${isOpen}">▶</button></td>
       <td class="num">${rowIdx+1}</td>
-      <td class="col-project"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="project">${esc(p.project)}</div>${p.code?`<span class="pcode">${esc(p.code)}</span>`:''}</td>
+      ${projectCell(p,i)}
       <td class="col-category"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="category">${esc(p.category)}</div></td>
       <td>${statusSelect(p,i)}</td>
       <td>${prioritySelect(p,i)}</td>
       <td class="col-roi"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="roi">${esc(p.roi)}</div></td>
-      <td class="col-stage"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="stage">${esc(p.stage)}</div></td>
-      <td class="col-next">${nextCell(p,i)}</td>
       <td class="col-owner"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="owner">${esc(p.owner)}</div></td>
-      <td class="col-poc"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="poc">${esc(p.poc)}</div></td>
-      <td class="col-created">${esc(fmtDateTime(p.created))}</td>
+      <td class="col-created">${esc(fmtDate(p.created))}</td>
       <td class="col-deadline"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="deadline">${esc(fmtDate(p.deadline))}</div></td>
-      <td class="col-notes"><div class="cell-edit" contenteditable="true" data-i="${i}" data-f="notes">${esc(p.notes)}</div></td>
-      <td class="col-remarks">${remarksCell(p,i)}</td>
       <td class="col-docs">${docsCell(p,i)}</td>
-      <td class="col-link">${linkCell(p.md,i,'md')}</td>
       <td class="col-actions"><button class="rowdel" data-del="${i}" title="Delete project">×</button></td>
     </tr>`;
+    return isOpen ? main+detailRow(p,i) : main;
   }).join('');
+  syncExpandBtn(open);
+}
+
+function syncExpandBtn(open){
+  const b=document.getElementById('btnExpand'); if(!b) return;
+  b.textContent = open>0 ? 'Collapse all' : 'Expand all';
 }
 
 function renderAll(){ renderStats(); refreshPocFilter(); refreshCatFilter(); refreshOwnerFilter(); renderTable(); renderSortArrows(); }
@@ -630,18 +751,20 @@ function bind(){
   });
 
   tbody.addEventListener('click', e=>{
+    const tog=e.target.closest('.rowtog');
+    if(tog){ const k=tog.dataset.rowtog; if(openRows.has(k)) openRows.delete(k); else openRows.add(k); renderTable(); return; }
     const del=e.target.closest('.rowdel');
     if(del){ const i=+del.dataset.del; if(confirm('Delete "'+(state.projects[i].project||'this project')+'"?')){ state.projects.splice(i,1); renderAll(); save(); toast('Project deleted'); } return; }
     const sdel=e.target.closest('.sub-del');
     if(sdel){ const i=+sdel.dataset.subdelI, j=+sdel.dataset.subdelJ; state.projects[i].next.splice(j,1); renderTable(); save(); return; }
     const sadd=e.target.closest('.sub-add');
     if(sadd){ const i=+sadd.dataset.addsub; state.projects[i].next.push({text:'',status:'To Do'}); renderTable(); save();
-      const cells=document.querySelectorAll('.sub-text[data-i="'+i+'"]'); const last=cells[cells.length-1]; if(last) last.focus(); return; }
+      const cells=document.querySelectorAll('.dbox--act .sub-text[data-i="'+i+'"]'); const last=cells[cells.length-1]; if(last) last.focus(); return; }
     const rdel=e.target.closest('.rem-del');
     if(rdel){ const i=+rdel.dataset.remdelI, j=+rdel.dataset.remdelJ; state.projects[i].remarks.splice(j,1); renderTable(); save(); return; }
     const radd=e.target.closest('.rem-add');
     if(radd){ const i=+radd.dataset.addrem; state.projects[i].remarks.push({text:'',type:'To Review'}); renderTable(); save();
-      const cells=document.querySelectorAll('.col-remarks .sub-text[data-i="'+i+'"]'); const last=cells[cells.length-1]; if(last) last.focus(); return; }
+      const cells=document.querySelectorAll('.dbox--rem .sub-text[data-i="'+i+'"]'); const last=cells[cells.length-1]; if(last) last.focus(); return; }
     const ledit=e.target.closest('.link-edit');
     if(ledit){
       editingLink={ i:+ledit.dataset.editlinkI, field:ledit.dataset.editlinkF };
@@ -662,8 +785,10 @@ function bind(){
   document.getElementById('btnAdd').addEventListener('click', ()=>{
     const today=new Date().toISOString().slice(0,16);
     state.projects.push({n:nextNum(),code:'',project:'New project',category:'',status:'Pending',priority:'Medium',roi:'',stage:'',next:[{text:'',status:'To Do'}],owner:'',poc:'',created:today,deadline:'',notes:'',onepager:'',deck:'',md:'',remarks:[]});
-    resetFilterUI(); renderAll(); save();
-    const rows=document.querySelectorAll('#tbody tr'); const last=rows[rows.length-1];
+    resetFilterUI();
+    openRows.add(String(state.projects[state.projects.length-1].n));
+    renderAll(); save();
+    const rows=document.querySelectorAll('#tbody tr.main'); const last=rows[rows.length-1];
     if(last){ last.scrollIntoView({behavior:'smooth',block:'center'}); const c=last.querySelector('.cell-edit'); if(c) c.focus(); }
     toast('Project added');
   });
@@ -681,6 +806,12 @@ function bind(){
   document.getElementById('filterCat').addEventListener('change', e=>{ filters.cat=e.target.value; renderTable(); });
   document.getElementById('filterOwner').addEventListener('change', e=>{ filters.owner=e.target.value; renderTable(); });
   document.getElementById('btnClear').addEventListener('click', ()=>{ resetFilterUI(); renderAll(); });
+  document.getElementById('btnExpand').addEventListener('click', ()=>{
+    if(openRows.size){ openRows.clear(); }
+    else { visibleProjects().forEach(p=>openRows.add(rowKey(p))); }
+    renderTable();
+  });
+  document.getElementById('btnStats').addEventListener('click', ()=>{ ui.statsOpen=!ui.statsOpen; applyUi(); saveUi(); });
   document.querySelector('thead').addEventListener('click', e=>{
     const th=e.target.closest('th[data-sort]'); if(!th) return;
     const k=th.dataset.sort;
