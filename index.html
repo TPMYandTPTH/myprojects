@@ -122,6 +122,31 @@ tr.detail > td{padding:0;background:#F6F4FC;border-bottom:1px solid #E3DFF0}
 .dbox{background:#fff;border:1px solid #E3DFF0;padding:10px 12px}
 .dstatic{font-size:13.5px;color:var(--tp-warm-muted);padding:9px 0;font-variant-numeric:tabular-nums}
 .dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.dspan{grid-column:1 / -1}
+.dhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}
+.dhead h4{margin:0}
+.minibtn{background:#fff;border:1px solid var(--tp-light-gray);color:var(--tp-dark-purple);font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:4px 9px;cursor:pointer;transition:all .15s}
+.minibtn:hover{border-color:var(--tp-magenta);color:var(--tp-magenta)}
+.lnks{display:flex;flex-direction:column;gap:6px}
+.lnk{display:grid;grid-template-columns:200px minmax(0,620px) 70px 22px;gap:8px;align-items:center}
+.lnk-label{font-size:13px;font-weight:600;color:var(--tp-deep-purple);padding:4px 6px}
+.cell-edit.lnk-label:empty::before{content:'Label';color:#c9c9d4;font-weight:400}
+.lnk-url{font-size:12.5px;color:#5d5a70;padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lnk-url:focus{white-space:normal;overflow:visible;word-break:break-all}
+.cell-edit.lnk-url:empty::before{content:'Paste URL';color:#c9c9d4}
+.lnk.is-empty .lnk-label{color:var(--tp-warm-muted);font-weight:500}
+.lnk-open{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;text-align:center;padding:5px 0;text-decoration:none;border:1px solid var(--tp-magenta);color:var(--tp-magenta);background:#fff;transition:all .15s}
+a.lnk-open:hover{background:var(--tp-magenta);color:#fff}
+span.lnk-open{border-color:#E2E0DB;color:#C9C7C1;cursor:default}
+.relbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed #E3DFF0}
+.relbar b{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tp-muted-purple);margin-right:4px}
+.relpill{background:#F6F4FC;border:1px solid #E3DFF0;color:var(--tp-deep-purple);font-family:inherit;font-size:12px;font-weight:600;padding:4px 10px;cursor:pointer;transition:all .15s}
+.relpill:hover{border-color:var(--tp-rich-purple);background:#fff}
+.chip--links{background:#FDE7F2;color:#C2166B;cursor:pointer}
+.chip--links:hover{background:var(--tp-magenta);color:#fff}
+tr.main.flash > td{animation:rowflash 1.6s ease}
+@keyframes rowflash{0%,40%{background:#FDE7F2}100%{background:#F6F4FC}}
+@media (max-width:760px){.lnk{grid-template-columns:minmax(0,1fr) 64px 22px}.lnk-url{grid-column:1 / -1;grid-row:2}}
 .cell-edit{outline:none;min-height:20px;border-radius:2px;transition:background .15s;cursor:text}
 .cell-edit:hover{background:#f3f0f9}
 .cell-edit:focus{background:#fff;box-shadow:0 0 0 2px var(--tp-rich-purple) inset}
@@ -355,7 +380,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
 
 <footer class="tp-footer">
   <div class="tp-logo-mark">TP</div>
-  <span class="tp-footer__txt">TP Project Tracker · click ▶ on a row for stage, actions, remarks and notes · edits save automatically to this browser · use Backup to export a copy</span>
+  <span class="tp-footer__txt">TP Project Tracker · click ▶ on a row for links, stage, actions, remarks and notes · edits save automatically to this browser · use Backup to export a copy</span>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -435,7 +460,54 @@ function flashSaved(){ const c=document.getElementById('saveChip'); c.textConten
 
 /* ---------- migration / normalize (handles older saved data) ---------- */
 function splitActions(s){ const parts=s.split(/\s*\d+\)\s*/).map(x=>x.trim()).filter(Boolean); return parts.length>1?parts:[s]; }
+/* starter link slots per project type - labels only unless the URL is known for certain */
+function suggestLinks(p){
+  const n=String(p.project||''), L=(label,url)=>({label:label,url:url||''});
+  const GH='https://github.com/TPMYandTPTH/', PG='https://tpmyandtpth.github.io/';
+  const LP={ELP:'G-SPPNGS1L2L',TLP:'G-T4R7DXXGK3',JLP:'G-N2Y6E93QSE',KLP:'G-SPPNGS1L2L',MLP:'G-DDTL115MWE'};
+  let m=n.match(/^GEO\b.*\((ELP|TLP|JLP|KLP|MLP)\)/i);
+  if(m){ const c=m[1].toUpperCase(); return [L('Markdown / llms.txt file (not published yet)'),L(c+' live page',PG+c+'/'),L(c+' repo',GH+c)]; }
+  m=n.match(/^(ELP|TLP|JLP|KLP|MLP)\b.*Landing Page/i);
+  if(m){
+    const c=m[1].toUpperCase();
+    const a=[L('Live page',PG+c+'/'),L('GitHub repo',GH+c),L('Open jobs page',/^(ELP|JLP|KLP)$/.test(c)?PG+c+'/open-jobs.html':''),L('GA4 report ('+LP[c]+')'),L('iCIMS job listing')];
+    if(c==='JLP') a.push(L('Privacy policy',PG+'JLP/privacy.html'),L('Cookie policy',PG+'JLP/cookies.html'),L('Terms',PG+'JLP/terms.html'));
+    if(c==='KLP') a.push(L('MS Forms application'));
+    return a.filter(x=>x.url||!/^Open jobs/.test(x.label));
+  }
+  if(/Landing Pages - Live Maintenance/i.test(n)) return [L('LP hub',PG+'LP/'),L('LP hub repo',GH+'LP'),
+    L('ELP',PG+'ELP/'),L('TLP',PG+'TLP/'),L('JLP',PG+'JLP/'),L('KLP',PG+'KLP/'),L('MLP',PG+'MLP/')];
+  if(/Malaysia LINE Bot/i.test(n)) return [L('TP Malaysia LINE account','https://line.me/R/ti/p/@286nmdsd'),L('Vercel project'),L('LINE Developers console')];
+  if(/Thailand LINE Bot/i.test(n)) return [L('TP Thailand LINE account','https://line.me/R/ti/p/@380twjmk'),L('Vercel project'),L('LINE Developers console')];
+  if(/xRAF/i.test(n)) return [L('Live portal',PG+'xRAF/'),L('Portal repo',GH+'xRAF'),L('xRAF-Dashboard',PG+'xRAF-Dashboard/'),L('exRAF-Dashboard',PG+'exRAF-Dashboard/')];
+  if(/^RAF Dashboard/i.test(n)) return [L('Dashboard',PG+'RAF-Dashboard/'),L('Repo',GH+'RAF-Dashboard')];
+  if(/^RAF - Referral/i.test(n)) return [L('Live RAF page',PG+'RAF/'),L('Repo',GH+'RAF')];
+  if(/GA4/i.test(n)) return [L('Dashboard'),L('GitHub repo')];
+  if(/RAF/i.test(n)) return [L('Dashboard'),L('Power BI report')];
+  if(/Joomla|Intranet/i.test(n)) return [L('TPMY intranet page'),L('TPTH intranet page')];
+  if(/Chatbot|FAQ Bot/i.test(n)) return [L('Knowledge base doc'),L('Bot endpoint')];
+  if(/tp-recruit/i.test(n)) return [L('Repo',GH+'tp-recruit'),L('Vercel project'),L('Supabase project')];
+  return [L('Live link')];
+}
+function linkHref(u){ u=String(u||'').trim(); if(!u) return ''; return /^[a-z][a-z0-9+.-]*:/i.test(u)?u:'https://'+u; }
+
+/* projects that share a code (ELP, JLP, RAF, LINE ...) are treated as related */
+const REL_TOKENS=['ELP','TLP','JLP','KLP','MLP','RAF','LINE','GA4','SANAS','CHATBOT','JOOMLA'];
+function relTokens(p){
+  const n=String(p.project||'').toUpperCase().replace(/XRAF/g,'RAF');
+  const t=REL_TOKENS.filter(k=>new RegExp('\\b'+k+'\\b').test(n));
+  if(/FAQ BOT|KNOWLEDGE BASE/.test(n)) t.push('CHATBOT');
+  if(/LANDING PAGES/.test(n)) t.push('ELP','TLP','JLP','KLP','MLP');
+  return t;
+}
+function relatedProjects(p){
+  const mine=relTokens(p); if(!mine.length) return [];
+  return state.projects.filter(q=>q!==p && relTokens(q).some(t=>mine.includes(t)));
+}
+
 function normalizeProject(p){
+  if(!Array.isArray(p.links)) p.links = suggestLinks(p);
+  else p.links = p.links.map(l=>({label:String(l&&l.label!=null?l.label:''), url:String(l&&l.url!=null?l.url:'')}));
   if(typeof p.poc!=='string') p.poc = p.poc==null?'':String(p.poc);
   if(typeof p.code!=='string') p.code = p.code==null?'':String(p.code);
   if(typeof p.onepager!=='string') p.onepager = p.onepager==null?'':String(p.onepager);
@@ -537,7 +609,8 @@ function visibleProjects(){
     if(q){
       const nextTxt=(p.next||[]).map(it=>it.text+' '+it.status).join(' ');
       const hay=[p.code,p.project,p.category,p.stage,nextTxt,p.owner,p.poc,
-        fmtDateTime(p.created),fmtDate(p.deadline),p.notes,p.status,p.priority,p.roi].join(' ').toLowerCase();
+        fmtDateTime(p.created),fmtDate(p.deadline),p.notes,p.status,p.priority,p.roi,
+        (p.links||[]).map(l=>l.label+' '+l.url).join(' ')].join(' ').toLowerCase();
       if(!hay.includes(q)) return false;
     }
     return true;
@@ -626,13 +699,34 @@ function projectCell(p,i){
   if(f.prob) chips+=`<span class="chip chip--prob" title="${esc(f.probText)}">${f.prob} problem${f.prob>1?'s':''}</span>`;
   if(f.rev) chips+=`<span class="chip chip--rev" title="${esc(f.revText)}">${f.rev} to review</span>`;
   if(f.notes) chips+=`<span class="chip chip--plain" title="${esc(f.notes)}">notes</span>`;
+  const nl=(p.links||[]).filter(l=>String(l.url||'').trim()).length;
+  if(nl) chips+=`<span class="chip chip--links" data-rowtog="${esc(rowKey(p))}" title="Show links">${nl} link${nl>1?'s':''}</span>`;
   const stageLine = f.stage ? `<div class="pstage" title="${esc(f.stage)}">${esc(f.stage)}</div>` : '';
   return `<td class="col-project"><div class="cell-edit pname" contenteditable="true" data-i="${i}" data-f="project">${esc(p.project)}</div>`+
     stageLine+(chips?`<div class="pmeta">${chips}</div>`:'')+`</td>`;
 }
 
+function linksBlock(p,i){
+  const items=(p.links||[]).map((l,j)=>{
+    const href=linkHref(l.url);
+    return `<div class="lnk ${href?'':'is-empty'}">
+      <div class="cell-edit lnk-label" contenteditable="true" data-i="${i}" data-j="${j}" data-f="linklabel">${esc(l.label)}</div>
+      <div class="cell-edit lnk-url" contenteditable="true" data-i="${i}" data-j="${j}" data-f="linkurl" title="${esc(l.url)}">${esc(l.url)}</div>
+      ${href?`<a class="lnk-open" href="${esc(href)}" target="_blank" rel="noopener noreferrer">Open \u2197</a>`:`<span class="lnk-open">Open</span>`}
+      <button class="rem-del" data-linkdel-i="${i}" data-linkdel-j="${j}" title="Remove link">\u00d7</button>
+    </div>`;
+  }).join('');
+  const rel=relatedProjects(p);
+  const relHtml=rel.length?`<div class="relbar"><b>Related</b>${rel.map(q=>`<button class="relpill" data-jump="${esc(rowKey(q))}">${esc(q.project)}</button>`).join('')}</div>`:'';
+  return `<div class="dblock dspan">
+    <div class="dhead"><h4>Links</h4><button class="minibtn" data-copylinks="${i}">Copy all links</button></div>
+    <div class="dbox"><div class="lnks">${items}</div><button class="rem-add" data-addlink="${i}" style="margin-top:8px">+ link</button>${relHtml}</div>
+  </div>`;
+}
+
 function detailRow(p,i){
   return `<tr class="detail" data-detail="${esc(rowKey(p))}"><td colspan="${COLSPAN}"><div class="detail-inner">
+    ${linksBlock(p,i)}
     <div class="dcol">
       <div class="dblock"><h4>Current stage</h4>
         <div class="cell-edit dfield" contenteditable="true" data-i="${i}" data-f="stage">${esc(p.stage)}</div></div>
@@ -710,12 +804,16 @@ function bind(){
     const i=+cell.dataset.i;
     if(cell.dataset.f==='subtext'){ state.projects[i].next[+cell.dataset.j].text=cell.innerText.trim(); }
     else if(cell.dataset.f==='remarktext'){ state.projects[i].remarks[+cell.dataset.j].text=cell.innerText.trim(); }
+    else if(cell.dataset.f==='linklabel'){ state.projects[i].links[+cell.dataset.j].label=cell.innerText.trim(); }
+    else if(cell.dataset.f==='linkurl'){ state.projects[i].links[+cell.dataset.j].url=cell.innerText.trim(); }
     else { const f=cell.dataset.f, t=cell.innerText.trim();
       state.projects[i][f] = (f==='deadline') ? (parseDate(t)||t) : t; }
     save();
   });
 
   tbody.addEventListener('keydown', e=>{
+    const lc=e.target.closest('.lnk-label,.lnk-url');
+    if(lc && e.key==='Enter'){ e.preventDefault(); lc.blur(); return; }
     const c=e.target.closest('.link-input'); if(!c) return;
     if(e.key==='Enter'){ e.preventDefault(); c.blur(); }
     if(e.key==='Escape'){ e.preventDefault(); editingLink=null; renderTable(); }
@@ -727,6 +825,7 @@ function bind(){
     if(c.dataset.f==='category') refreshCatFilter();
     if(c.dataset.f==='owner') refreshOwnerFilter();
     if(c.dataset.f==='deadline') renderTable();
+    if(c.dataset.f==='linkurl') renderTable();
     if(c.classList.contains('link-input')){ editingLink=null; renderTable(); } });
 
   tbody.addEventListener('change', e=>{
@@ -751,8 +850,17 @@ function bind(){
   });
 
   tbody.addEventListener('click', e=>{
-    const tog=e.target.closest('.rowtog');
+    const tog=e.target.closest('[data-rowtog]');
     if(tog){ const k=tog.dataset.rowtog; if(openRows.has(k)) openRows.delete(k); else openRows.add(k); renderTable(); return; }
+    const ladd=e.target.closest('[data-addlink]');
+    if(ladd){ const i=+ladd.dataset.addlink; state.projects[i].links.push({label:'',url:''}); renderTable(); save();
+      const cells=document.querySelectorAll('.lnk-label[data-i="'+i+'"]'); const last=cells[cells.length-1]; if(last) last.focus(); return; }
+    const ldel=e.target.closest('[data-linkdel-i]');
+    if(ldel){ const i=+ldel.dataset.linkdelI, j=+ldel.dataset.linkdelJ; state.projects[i].links.splice(j,1); renderTable(); save(); return; }
+    const lcopy=e.target.closest('[data-copylinks]');
+    if(lcopy){ copyLinks(+lcopy.dataset.copylinks); return; }
+    const jump=e.target.closest('[data-jump]');
+    if(jump){ jumpTo(jump.dataset.jump); return; }
     const del=e.target.closest('.rowdel');
     if(del){ const i=+del.dataset.del; if(confirm('Delete "'+(state.projects[i].project||'this project')+'"?')){ state.projects.splice(i,1); renderAll(); save(); toast('Project deleted'); } return; }
     const sdel=e.target.closest('.sub-del');
@@ -784,7 +892,7 @@ function bind(){
 
   document.getElementById('btnAdd').addEventListener('click', ()=>{
     const today=new Date().toISOString().slice(0,16);
-    state.projects.push({n:nextNum(),code:'',project:'New project',category:'',status:'Pending',priority:'Medium',roi:'',stage:'',next:[{text:'',status:'To Do'}],owner:'',poc:'',created:today,deadline:'',notes:'',onepager:'',deck:'',md:'',remarks:[]});
+    state.projects.push({n:nextNum(),code:'',project:'New project',category:'',status:'Pending',priority:'Medium',roi:'',stage:'',next:[{text:'',status:'To Do'}],owner:'',poc:'',created:today,deadline:'',notes:'',onepager:'',deck:'',md:'',remarks:[],links:[{label:'Live link',url:''}]});
     resetFilterUI();
     openRows.add(String(state.projects[state.projects.length-1].n));
     renderAll(); save();
@@ -852,7 +960,7 @@ function resetFilterUI(){
 
 /* ---------- export ---------- */
 function exportCSV(){
-  const cols=[['n','#'],['code','Code'],['project','Project'],['category','Department'],['status','Status'],['priority','Priority'],['roi','ROI'],['stage','Current Stage'],['next','Next Action'],['owner','Owner'],['poc','POC'],['created','Created'],['deadline','Deadline'],['notes','Notes'],['remarks','Remarks'],['onepager','One-Pager'],['deck','Presentation'],['md','GEO / MD']];
+  const cols=[['n','#'],['code','Code'],['project','Project'],['category','Department'],['status','Status'],['priority','Priority'],['roi','ROI'],['stage','Current Stage'],['next','Next Action'],['owner','Owner'],['poc','POC'],['created','Created'],['deadline','Deadline'],['notes','Notes'],['remarks','Remarks'],['onepager','One-Pager'],['deck','Presentation'],['md','GEO / MD'],['links','Links']];
   const q=s=>{ s=String(s==null?'':s); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
   let csv=cols.map(c=>q(c[1])).join(',')+'\n';
   visibleProjects().forEach((p,rowIdx)=>{
@@ -860,6 +968,7 @@ function exportCSV(){
       if(c[0]==='n'){ return q(rowIdx+1); }
       if(c[0]==='next'){ return q((p.next||[]).map(it=>'['+it.status+'] '+it.text).join('\n')); }
       if(c[0]==='remarks'){ return q((p.remarks||[]).map(it=>'['+it.type+'] '+it.text).join('\n')); }
+      if(c[0]==='links'){ return q((p.links||[]).filter(l=>String(l.url||'').trim()).map(l=>(l.label||'Link')+': '+linkHref(l.url)).join('\n')); }
       if(c[0]==='created') return q(fmtDateTime(p.created));
       if(c[0]==='deadline') return q(fmtDate(p.deadline));
       return q(p[c[0]]);
@@ -871,6 +980,32 @@ function downloadFile(content,name,type){
   const blob=new Blob([content],{type}), url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
+function copyLinks(i){
+  const p=state.projects[i], base=location.href.replace(/[^/]*$/,''), slug=slugify(p.project), lines=[p.project];
+  DOC_KINDS.forEach(k=>{
+    const stored=(k.key!=='roi' && p[k.key])?String(p[k.key]).trim():'';
+    if(stored) lines.push(k.label+': '+linkHref(stored));
+    else if(docState[k.dir+'/'+slug]===true) lines.push(k.label+': '+base+k.dir+'/'+slug+'.html');
+  });
+  (p.links||[]).forEach(l=>{ if(String(l.url||'').trim()) lines.push((l.label||'Link')+': '+linkHref(l.url)); });
+  if(String(p.md||'').trim()) lines.push('GEO / MD: '+linkHref(p.md));
+  const txt=lines.join('\n');
+  const done=()=>toast((lines.length-1)+' link'+(lines.length===2?'':'s')+' copied');
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt,done));
+  else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,done){
+  const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(e){ toast('Copy failed'); } ta.remove();
+}
+function jumpTo(key){
+  let row=document.querySelector('#tbody tr.main[data-key="'+key+'"]');
+  if(!row){ resetFilterUI(); renderAll(); }
+  openRows.add(key); renderTable();
+  row=document.querySelector('#tbody tr.main[data-key="'+key+'"]');
+  if(row){ row.scrollIntoView({behavior:'smooth',block:'center'}); row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'),1700); }
+}
+
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),1900); }
 
 /* ---------- linked documents (One-Pager / Presentation / MD) ---------- */
