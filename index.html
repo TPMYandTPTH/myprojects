@@ -123,6 +123,28 @@ tr.detail > td{padding:0;background:#F6F4FC;border-bottom:1px solid #E3DFF0}
 .dstatic{font-size:13.5px;color:var(--tp-warm-muted);padding:9px 0;font-variant-numeric:tabular-nums}
 .dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .dspan{grid-column:1 / -1}
+.tp1grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px}
+.tp1f label{display:block;font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tp-warm-muted);margin-bottom:4px}
+.tp1f .dfield{min-height:32px;padding:6px 9px;font-size:13px}
+.tp1f select{width:100%;font-family:inherit;font-size:13px;padding:6px 8px;border:1px solid #E3DFF0;background:#fff;color:var(--tp-dark-purple)}
+.tp1f.wide{grid-column:span 2}
+.tp1auto{font-size:12px;color:var(--tp-warm-muted);margin-top:10px}
+.tp1auto b{color:var(--tp-deep-purple);font-weight:600}
+.chip--tp1no{background:#FFF4E0;color:#A36400}
+.minibtn--pink{background:var(--tp-magenta);border-color:var(--tp-magenta);color:#fff}
+.minibtn--pink:hover{background:var(--tp-magenta-hover);color:#fff}
+.tp1modal{position:fixed;inset:0;z-index:3000;background:rgba(26,26,46,.55);display:flex;align-items:center;justify-content:center;padding:24px}
+.tp1modal[hidden]{display:none}
+.tp1box{background:#fff;width:min(900px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.tp1head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--tp-deep-purple);color:#fff}
+.tp1head h3{font-size:13px;letter-spacing:1.6px;text-transform:uppercase;margin:0}
+.tp1head .acts{display:flex;gap:8px}
+.tp1head button{background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:6px 12px;cursor:pointer}
+.tp1head button.pri{background:var(--tp-magenta);border-color:var(--tp-magenta)}
+.tp1body{overflow:auto;padding:16px 18px;background:#FAF9FC}
+.tp1body pre{font-family:ui-monospace,Consolas,Menlo,monospace;font-size:12.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;margin:0;color:var(--tp-black)}
+.tp1note{font-size:12px;color:var(--tp-warm-muted);padding:10px 18px;border-top:1px solid #ececf1}
+@media (max-width:1040px){.tp1grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .dhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}
 .dhead h4{margin:0}
 .minibtn{background:#fff;border:1px solid var(--tp-light-gray);color:var(--tp-dark-purple);font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:4px 9px;cursor:pointer;transition:all .15s}
@@ -309,6 +331,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
     <span id="saveChip" class="savechip">Autosave</span>
     <button class="btn btn--ghost btn--sm" id="btnAdd">+ Add Project</button>
     <button class="btn btn--ghost btn--sm" id="btnImport">Import Excel</button>
+    <button class="btn btn--ghost btn--sm" id="btnTp1">TP One export</button>
     <button class="btn btn--ghost btn--sm" id="btnCsv">Export CSV</button>
     <button class="btn btn--ghost btn--sm" id="btnSave">Backup</button>
     <button class="btn btn--ghost btn--sm" id="btnLoad">Restore</button>
@@ -383,6 +406,14 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
   <span class="tp-footer__txt">TP Project Tracker · click ▶ on a row for links, stage, actions, remarks and notes · edits save automatically to this browser · use Backup to export a copy</span>
 </footer>
 
+<div class="tp1modal" id="tp1modal" hidden>
+  <div class="tp1box" role="dialog" aria-modal="true" aria-labelledby="tp1title">
+    <div class="tp1head"><h3 id="tp1title">TP One</h3>
+      <div class="acts"><button class="pri" id="tp1copy">Copy</button><button id="tp1dl">Download .txt</button><button id="tp1close">Close</button></div></div>
+    <div class="tp1body"><pre id="tp1pre"></pre></div>
+    <div class="tp1note" id="tp1note">Fields with TBC are empty in the tracker - fill them in the TP One block of each project and they carry over next time.</div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -464,13 +495,13 @@ function splitActions(s){ const parts=s.split(/\s*\d+\)\s*/).map(x=>x.trim()).fi
 function suggestLinks(p){
   const n=String(p.project||''), L=(label,url)=>({label:label,url:url||''});
   const GH='https://github.com/TPMYandTPTH/', PG='https://tpmyandtpth.github.io/';
-  const LP={ELP:'G-SPPNGS1L2L',TLP:'G-T4R7DXXGK3',JLP:'G-N2Y6E93QSE',KLP:'G-SPPNGS1L2L',MLP:'G-DDTL115MWE'};
+  const LP={ELP:'G-5ZMYRDNSQ7',TLP:'G-T4R7DXXGK3',JLP:'G-N2Y6E93QSE',KLP:'G-SPPNGS1L2L',MLP:'G-DDTL115MWE'};
   let m=n.match(/^GEO\b.*\((ELP|TLP|JLP|KLP|MLP)\)/i);
-  if(m){ const c=m[1].toUpperCase(); return [L('Markdown / llms.txt file (not published yet)'),L(c+' live page',PG+c+'/'),L(c+' repo',GH+c)]; }
+  if(m){ const c=m[1].toUpperCase(); return [L('llms.txt',PG+c+'/llms.txt'),L(c+' live page',PG+c+'/'),L(c+' repo',GH+c)]; }
   m=n.match(/^(ELP|TLP|JLP|KLP|MLP)\b.*Landing Page/i);
   if(m){
     const c=m[1].toUpperCase();
-    const a=[L('Live page',PG+c+'/'),L('GitHub repo',GH+c),L('Open jobs page',/^(ELP|JLP|KLP)$/.test(c)?PG+c+'/open-jobs.html':''),L('GA4 report ('+LP[c]+')'),L('iCIMS job listing')];
+    const a=[L('Live page',PG+c+'/'),L('GitHub repo',GH+c),L('llms.txt',PG+c+'/llms.txt'),L('Open jobs page',/^(ELP|JLP|KLP)$/.test(c)?PG+c+'/open-jobs.html':''),L('GA4 report ('+LP[c]+')'),L('iCIMS job listing')];
     if(c==='JLP') a.push(L('Privacy policy',PG+'JLP/privacy.html'),L('Cookie policy',PG+'JLP/cookies.html'),L('Terms',PG+'JLP/terms.html'));
     if(c==='KLP') a.push(L('MS Forms application'));
     return a.filter(x=>x.url||!/^Open jobs/.test(x.label));
@@ -505,7 +536,84 @@ function relatedProjects(p){
   return state.projects.filter(q=>q!==p && relTokens(q).some(t=>mine.includes(t)));
 }
 
+/* ===================== TP ONE ===================== */
+const TP1_CATEGORIES=['Strategic Initiatives','Passion Projects','HR Optimization','COS Automation','Facilities & Admin','Talent Engagement','Audit','WFM & BI','WARM Projects APAC'];
+const TP1_COUNTRIES=['TPMY','TPTH','TPMY + TPTH'];
+const TP1_TEXT=[['sponsor','Sponsored By'],['impact','Impact (Financials)'],['tools','Tools'],['objectives','Objectives'],
+  ['kickoff','Kick-Off Date'],['commit','Commitment Date'],['launch','Launch Date'],['closing','Closing Date']];
+function tp1Defaults(p){
+  const n=String(p.project||'');
+  return {country:/\bTLP\b|Thai|Thailand/i.test(n)?'TPTH':'TPMY', cat:'COS Automation',
+    sponsor:'',impact:'',tools:'',objectives:'',kickoff:'',commit:'',launch:'',closing:''};
+}
+function tp1Priority(p){ return {High:'P1',Medium:'P2',Low:'P3'}[p.priority]||'P2'; }
+function inTpOne(p){ return /^[A-Z]{2,}-\d{4}-\d+/.test(String(p.code||'').trim()); }
+function tp1Text(p){
+  const t=p.tp1||tp1Defaults(p), v=x=>{ x=String(x==null?'':x).trim(); return x||'TBC'; };
+  const members=[p.owner,p.poc].map(x=>String(x||'').trim()).filter(Boolean).filter((x,k,a)=>a.indexOf(x)===k).join(', ');
+  const details=[String(p.notes||'').trim(),String(p.stage||'').trim()?('Current stage: '+String(p.stage).trim()):''].filter(Boolean).join(' ');
+  const rows=[
+    ['Project Code', inTpOne(p)?p.code.trim():'auto'],
+    ['ROI', v(p.roi)], ['Project Title', p.project], ['Impact', v(t.impact)], ['Closing Date', v(t.closing)],
+    ['Project Lead', v(p.owner)], ['Sponsored By', v(t.sponsor)], ['Priority', tp1Priority(p)], ['Country', v(t.country)],
+    ['Departments', v(p.category)], ['Category', v(t.cat)], ['Tools', v(t.tools)], ['Project Members', v(members)],
+    ['Project Details', v(details)], ['Objectives', v(t.objectives)], ['Commitment Date', v(t.commit)],
+    ['Kick-Off Date', v(t.kickoff||fmtDate(p.created))], ['Launch Date', v(t.launch)], ['Deadline', v(fmtDate(p.deadline))]
+  ];
+  const w=Math.max.apply(null,rows.map(r=>r[0].length));
+  let out=(inTpOne(p)?'TP One - Update Strategy':'TP One - Create a New Strategy')+'\n'+rows.map(r=>r[0].padEnd(w)+' : '+r[1]).join('\n');
+  const acts=(p.next||[]).filter(it=>String(it.text||'').trim());
+  out+='\n\nStatus: '+p.status;
+  if(acts.length) out+='\nActions ('+(t.country||'TPMY')+'):\n'+acts.map(it=>'- ['+it.status+'] '+it.text.trim()).join('\n');
+  const rem=(p.remarks||[]).filter(r=>String(r.text||'').trim());
+  if(rem.length) out+='\nRemarks:\n'+rem.map(r=>'- '+r.type+': '+r.text.trim()).join('\n');
+  return out;
+}
+
+/* one-time data updates, applied to saved data as well as the seed */
+const TODAY_MIG='23 Sep 2026';
+function migrate(st){
+  st.migrations=Array.isArray(st.migrations)?st.migrations:[];
+  let changed=false;
+  const has=(p,re)=>(p.remarks||[]).some(r=>re.test(r.text||''));
+  const addRem=(p,type,text,re)=>{ if(!has(p,re)){ p.remarks.push({type:type,text:text}); changed=true; } };
+  if(!st.migrations.includes('2026-09-23-llms-ga4')){
+    const PG='https://tpmyandtpth.github.io/';
+    st.projects.forEach(p=>{
+      const n=String(p.project||'');
+      let m=n.match(/^GEO\b.*\((ELP|TLP|JLP|KLP|MLP)\)/i);
+      if(m){
+        const c=m[1].toUpperCase(), url=PG+c+'/llms.txt';
+        const slot=(p.links||[]).find(l=>/llms\.txt|markdown/i.test(l.label||''));
+        if(slot){ slot.label='llms.txt'; slot.url=url; } else p.links.unshift({label:'llms.txt',url:url});
+        (p.next||[]).forEach(it=>{ if(/^publish\b/i.test(it.text||'') && it.status!=='Done'){ it.status='Done'; } });
+        if(!(p.next||[]).some(it=>/cite the page|pick it up/i.test(it.text||'')))
+          p.next.push({text:'Check in 2-4 weeks whether ChatGPT, Perplexity and Gemini pick up and cite the page',status:'To Do'});
+        p.stage='llms.txt live at tpmyandtpth.github.io/'+c+'/llms.txt since '+TODAY_MIG+' - monitoring whether AI assistants pick it up';
+        addRem(p,'Final Status','llms.txt published '+TODAY_MIG+'. It only restates content already live on the '+c+' page.',/llms\.txt published/);
+        changed=true;
+      }
+      m=n.match(/^(ELP|TLP|JLP|KLP|MLP)\b.*Landing Page/i);
+      if(m){
+        const c=m[1].toUpperCase();
+        if(!(p.links||[]).some(l=>/llms\.txt/i.test(l.label||''))){ p.links.splice(Math.min(2,p.links.length),0,{label:'llms.txt',url:PG+c+'/llms.txt'}); changed=true; }
+        (p.links||[]).forEach(l=>{ if(c==='ELP' && /G-SPPNGS1L2L/.test(l.label||'')){ l.label=l.label.replace('G-SPPNGS1L2L','G-5ZMYRDNSQ7'); changed=true; } });
+        if(c==='ELP'){
+          addRem(p,'Final Status','GA4 fixed '+TODAY_MIG+': homepage now reports to ELP\'s own tag G-5ZMYRDNSQ7 (it was using KLP\'s G-SPPNGS1L2L).',/GA4 fixed/);
+          addRem(p,'Problem','testimonials.html and why-malaysia-thailand.html in the ELP folder are Korean pages copied from KLP, and report to KLP\'s GA4. Need English versions.',/Korean pages copied/);
+        }
+        if(c==='KLP') addRem(p,'To Review','KLP GA4 numbers before '+TODAY_MIG+' include ELP homepage visits (ELP was using KLP\'s tag).',/include ELP homepage/);
+        if(c==='TLP') addRem(p,'Problem','The LINE button on TLP opens the TP Malaysia LINE account (@286nmdsd), not TP Thailand (@380twjmk).',/LINE button on TLP/);
+      }
+    });
+    st.migrations.push('2026-09-23-llms-ga4'); changed=true;
+  }
+  return changed;
+}
+
 function normalizeProject(p){
+  if(!p.tp1||typeof p.tp1!=='object') p.tp1=tp1Defaults(p);
+  else { const d=tp1Defaults(p); Object.keys(d).forEach(k=>{ if(p.tp1[k]==null) p.tp1[k]=d[k]; else p.tp1[k]=String(p.tp1[k]); }); }
   if(!Array.isArray(p.links)) p.links = suggestLinks(p);
   else p.links = p.links.map(l=>({label:String(l&&l.label!=null?l.label:''), url:String(l&&l.url!=null?l.url:'')}));
   if(typeof p.poc!=='string') p.poc = p.poc==null?'':String(p.poc);
@@ -552,9 +660,11 @@ function init(){
   const stored=load();
   state = stored ? stored : { lastUpdated:'', projects: JSON.parse(JSON.stringify(SEED)) };
   normalize(state);
+  const migrated=migrate(state);
   if(!state.lastUpdated) state.lastUpdated = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   document.getElementById('lastUpdated').textContent = state.lastUpdated;
   applyUi(); renderAll(); bind(); detectDocs();
+  if(migrated){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
 }
 function nextNum(){ return state.projects.reduce((m,p)=>Math.max(m,Number(p.n)||0),0)+1; }
 
@@ -695,6 +805,7 @@ function projectCell(p,i){
   const f=projFlags(p);
   let chips='';
   if(p.code) chips+=`<span class="chip chip--code">${esc(p.code)}</span>`;
+  if(!inTpOne(p) && p.status!=='Cancelled') chips+=`<span class="chip chip--tp1no" title="No TP One code yet">not in TP One</span>`;
   if(f.acts) chips+=`<span class="chip chip--act ${f.done===f.acts?'is-all':''}">${f.done}/${f.acts} done</span>`;
   if(f.prob) chips+=`<span class="chip chip--prob" title="${esc(f.probText)}">${f.prob} problem${f.prob>1?'s':''}</span>`;
   if(f.rev) chips+=`<span class="chip chip--rev" title="${esc(f.revText)}">${f.rev} to review</span>`;
@@ -724,9 +835,30 @@ function linksBlock(p,i){
   </div>`;
 }
 
+function tp1Block(p,i){
+  const t=p.tp1||tp1Defaults(p);
+  const sel=(f,opts)=>`<select data-i="${i}" data-f="tp1:${f}">`+opts.map(o=>`<option ${o===t[f]?'selected':''}>${esc(o)}</option>`).join('')+`</select>`;
+  const fld=(f,label,wide)=>`<div class="tp1f${wide?' wide':''}"><label>${label}</label><div class="cell-edit dfield" contenteditable="true" data-i="${i}" data-f="tp1:${f}">${esc(t[f])}</div></div>`;
+  return `<div class="dblock dspan">
+    <div class="dhead"><h4>TP One ${inTpOne(p)?'&middot; '+esc(p.code):'&middot; not logged yet'}</h4>
+      <span><button class="minibtn" data-tp1view="${i}">Preview</button> <button class="minibtn minibtn--pink" data-tp1copy="${i}">Copy for TP One</button></span></div>
+    <div class="dbox">
+      <div class="tp1grid">
+        <div class="tp1f"><label>Country</label>${sel('country',TP1_COUNTRIES)}</div>
+        <div class="tp1f"><label>Category</label>${sel('cat',TP1_CATEGORIES)}</div>
+        ${fld('sponsor','Sponsored By')}${fld('tools','Tools')}
+        ${fld('impact','Impact (Financials)',true)}${fld('objectives','Objectives',true)}
+        ${fld('kickoff','Kick-Off Date')}${fld('commit','Commitment Date')}${fld('launch','Launch Date')}${fld('closing','Closing Date')}
+      </div>
+      <div class="tp1auto">Filled automatically from the tracker: <b>Code</b>, <b>ROI</b>, <b>Title</b>, <b>Lead</b> (Owner), <b>Priority</b> (${tp1Priority(p)}), <b>Department</b>, <b>Members</b> (Owner + POC), <b>Details</b> (Notes + Stage), <b>Deadline</b>, plus Status, Actions and Remarks. Kick-Off falls back to the Created date.</div>
+    </div>
+  </div>`;
+}
+
 function detailRow(p,i){
   return `<tr class="detail" data-detail="${esc(rowKey(p))}"><td colspan="${COLSPAN}"><div class="detail-inner">
     ${linksBlock(p,i)}
+    ${tp1Block(p,i)}
     <div class="dcol">
       <div class="dblock"><h4>Current stage</h4>
         <div class="cell-edit dfield" contenteditable="true" data-i="${i}" data-f="stage">${esc(p.stage)}</div></div>
@@ -796,7 +928,7 @@ function renderSortArrows(){
 
 /* ---------- events ---------- */
 function bind(){
-  bindImport();
+  bindImport(); bindTp1();
   const tbody=document.getElementById('tbody');
 
   tbody.addEventListener('input', e=>{
@@ -806,6 +938,7 @@ function bind(){
     else if(cell.dataset.f==='remarktext'){ state.projects[i].remarks[+cell.dataset.j].text=cell.innerText.trim(); }
     else if(cell.dataset.f==='linklabel'){ state.projects[i].links[+cell.dataset.j].label=cell.innerText.trim(); }
     else if(cell.dataset.f==='linkurl'){ state.projects[i].links[+cell.dataset.j].url=cell.innerText.trim(); }
+    else if(cell.dataset.f.indexOf('tp1:')===0){ state.projects[i].tp1[cell.dataset.f.slice(4)]=cell.innerText.trim(); }
     else { const f=cell.dataset.f, t=cell.innerText.trim();
       state.projects[i][f] = (f==='deadline') ? (parseDate(t)||t) : t; }
     save();
@@ -831,6 +964,7 @@ function bind(){
   tbody.addEventListener('change', e=>{
     const sel=e.target.closest('select'); if(!sel) return;
     const i=+sel.dataset.i, f=sel.dataset.f;
+    if(f && f.indexOf('tp1:')===0){ state.projects[i].tp1[f.slice(4)]=sel.value; save(); return; }
     if(f==='substatus'){
       const j=+sel.dataset.j; state.projects[i].next[j].status=sel.value;
       sel.className='sub-status '+(SUB_CLASS[sel.value]||'');
@@ -857,6 +991,10 @@ function bind(){
       const cells=document.querySelectorAll('.lnk-label[data-i="'+i+'"]'); const last=cells[cells.length-1]; if(last) last.focus(); return; }
     const ldel=e.target.closest('[data-linkdel-i]');
     if(ldel){ const i=+ldel.dataset.linkdelI, j=+ldel.dataset.linkdelJ; state.projects[i].links.splice(j,1); renderTable(); save(); return; }
+    const t1c=e.target.closest('[data-tp1copy]');
+    if(t1c){ copyText(tp1Text(state.projects[+t1c.dataset.tp1copy]),'TP One entry copied'); return; }
+    const t1v=e.target.closest('[data-tp1view]');
+    if(t1v){ const p=state.projects[+t1v.dataset.tp1view]; openTp1(p.project, tp1Text(p)); return; }
     const lcopy=e.target.closest('[data-copylinks]');
     if(lcopy){ copyLinks(+lcopy.dataset.copylinks); return; }
     const jump=e.target.closest('[data-jump]');
@@ -892,7 +1030,7 @@ function bind(){
 
   document.getElementById('btnAdd').addEventListener('click', ()=>{
     const today=new Date().toISOString().slice(0,16);
-    state.projects.push({n:nextNum(),code:'',project:'New project',category:'',status:'Pending',priority:'Medium',roi:'',stage:'',next:[{text:'',status:'To Do'}],owner:'',poc:'',created:today,deadline:'',notes:'',onepager:'',deck:'',md:'',remarks:[],links:[{label:'Live link',url:''}]});
+    state.projects.push({n:nextNum(),code:'',project:'New project',category:'',status:'Pending',priority:'Medium',roi:'',stage:'',next:[{text:'',status:'To Do'}],owner:'',poc:'',created:today,deadline:'',notes:'',onepager:'',deck:'',md:'',remarks:[],links:[{label:'Live link',url:''}],tp1:{country:'TPMY',cat:'COS Automation',sponsor:'',impact:'',tools:'',objectives:'',kickoff:'',commit:'',launch:'',closing:''}});
     resetFilterUI();
     openRows.add(String(state.projects[state.projects.length-1].n));
     renderAll(); save();
@@ -935,14 +1073,14 @@ function bind(){
     const file=e.target.files[0]; if(!file) return;
     const r=new FileReader();
     r.onload=()=>{ try{ const p=JSON.parse(r.result);
-      if(p&&Array.isArray(p.projects)){ state=p; normalize(state); document.getElementById('lastUpdated').textContent=state.lastUpdated||''; resetFilterUI(); renderAll(); save(); toast('Backup restored'); }
+      if(p&&Array.isArray(p.projects)){ state=p; normalize(state); migrate(state); document.getElementById('lastUpdated').textContent=state.lastUpdated||''; resetFilterUI(); renderAll(); save(); toast('Backup restored'); }
       else toast('Invalid backup file');
     }catch(err){ toast('Could not read file'); } };
     r.readAsText(file); e.target.value='';
   });
   document.getElementById('btnReset').addEventListener('click', ()=>{
     if(confirm('Reset your projects to the starting data? Your current edits will be replaced.')){
-      state={ lastUpdated:'', projects: JSON.parse(JSON.stringify(SEED)) }; normalize(state);
+      state={ lastUpdated:'', projects: JSON.parse(JSON.stringify(SEED)) }; normalize(state); migrate(state);
       resetFilterUI(); document.getElementById('lastUpdated').textContent=state.lastUpdated; renderAll(); save(); toast('Reset to original');
     }
   });
@@ -980,6 +1118,37 @@ function downloadFile(content,name,type){
   const blob=new Blob([content],{type}), url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
+function copyText(txt,msg){
+  const done=()=>toast(msg||'Copied');
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt,done));
+  else fallbackCopy(txt,done);
+}
+let tp1Current={title:'',text:''};
+function openTp1(title,text){
+  tp1Current={title:title,text:text};
+  document.getElementById('tp1title').textContent='TP One \u00b7 '+title;
+  document.getElementById('tp1pre').textContent=text;
+  document.getElementById('tp1modal').hidden=false;
+}
+function closeTp1(){ document.getElementById('tp1modal').hidden=true; }
+function tp1All(){
+  const list=visibleProjects().filter(p=>p.status!=='Cancelled');
+  const todo=list.filter(p=>!inTpOne(p)), done=list.filter(inTpOne);
+  const sep='\n\n'+'='.repeat(60)+'\n\n';
+  let head='TP One export - '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+'\n'+
+    todo.length+' to create (no TP One code yet), '+done.length+' to update. Cancelled projects left out.';
+  const block=(title,arr)=>arr.length?('\n\n### '+title+'\n\n'+arr.map(tp1Text).join(sep)):'';
+  return head+block('CREATE IN TP ONE',todo)+block('UPDATE IN TP ONE',done);
+}
+function bindTp1(){
+  document.getElementById('btnTp1').addEventListener('click',()=>openTp1('all visible projects',tp1All()));
+  document.getElementById('tp1close').addEventListener('click',closeTp1);
+  document.getElementById('tp1copy').addEventListener('click',()=>copyText(tp1Current.text,'Copied for TP One'));
+  document.getElementById('tp1dl').addEventListener('click',()=>downloadFile(tp1Current.text,'tp-one-'+slugify(tp1Current.title||'export')+'.txt','text/plain;charset=utf-8;'));
+  document.getElementById('tp1modal').addEventListener('click',e=>{ if(e.target.id==='tp1modal') closeTp1(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !document.getElementById('tp1modal').hidden) closeTp1(); });
+}
+
 function copyLinks(i){
   const p=state.projects[i], base=location.href.replace(/[^/]*$/,''), slug=slugify(p.project), lines=[p.project];
   DOC_KINDS.forEach(k=>{
