@@ -39,6 +39,27 @@ body{font-family:var(--font-primary);font-size:15px;line-height:1.6;color:var(--
 .tp-nav__actions{display:flex;gap:10px;align-items:center}
 .savechip{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-right:6px;transition:color .3s}
 .savechip.on{color:#7ee0a8}
+.syncbtn{position:relative}
+.syncbtn .dot{width:8px;height:8px;border-radius:50%;background:#8a8aa3;display:inline-block;flex:none}
+.syncbtn[data-s="ok"] .dot{background:#3AD48A}
+.syncbtn[data-s="busy"] .dot{background:#E8A83A}
+.syncbtn[data-s="warn"] .dot{background:#FF4D6D}
+.syncpanel{position:fixed;top:70px;right:24px;z-index:1500;width:340px;max-width:calc(100vw - 32px);background:#fff;border:1px solid var(--tp-light-gray);box-shadow:0 14px 40px rgba(0,0,0,.22);padding:16px 18px;font-size:13px;color:var(--tp-black)}
+.syncpanel[hidden]{display:none}
+.syncpanel h4{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--tp-deep-purple);margin:0 0 8px}
+.syncpanel p{margin:0 0 10px;line-height:1.5;color:#55536a}
+.syncpanel input{width:100%;padding:9px 11px;border:1.5px solid var(--tp-light-gray);font-family:inherit;font-size:13px;margin-bottom:10px;outline:none}
+.syncpanel input:focus{border-color:var(--tp-rich-purple)}
+.syncpanel .row{display:flex;gap:8px;flex-wrap:wrap}
+.syncpanel button{font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:8px 12px;cursor:pointer;border:1px solid var(--tp-light-gray);background:#fff;color:var(--tp-dark-purple)}
+.syncpanel button.pri{background:var(--tp-magenta);border-color:var(--tp-magenta);color:#fff}
+.syncpanel .meta{font-size:12px;color:var(--tp-warm-muted);margin-top:10px}
+.syncpanel .err{color:#B33A3A;font-size:12px;margin-top:8px}
+.syncconflict{background:#FFF4E0;border:1px solid #F0C878;padding:12px 16px;margin:0 0 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;color:#6B4A00}
+.syncconflict[hidden]{display:none}
+.syncconflict b{color:#4a3300}
+.syncconflict button{font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:7px 12px;cursor:pointer;border:1px solid #D9A93D;background:#fff;color:#6B4A00}
+.syncconflict button.pri{background:#6B4A00;border-color:#6B4A00;color:#fff}
 
 .btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;font-family:var(--font-primary);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;border:none;cursor:pointer;transition:all var(--transition-base);border-radius:0;white-space:nowrap}
 .btn--primary{background:var(--tp-magenta);color:#fff}
@@ -329,6 +350,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
   </div>
   <div class="tp-nav__actions">
     <span id="saveChip" class="savechip">Autosave</span>
+    <button class="btn btn--ghost btn--sm syncbtn" id="btnSync" data-s="off"><span class="dot"></span><span id="syncLabel">Sync: off</span></button>
     <button class="btn btn--ghost btn--sm" id="btnAdd">+ Add Project</button>
     <button class="btn btn--ghost btn--sm" id="btnImport">Import Excel</button>
     <button class="btn btn--ghost btn--sm" id="btnTp1">TP One export</button>
@@ -384,7 +406,29 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
   </div>
 </div>
 
+<div class="syncpanel" id="syncPanel" hidden>
+  <div id="syncOut">
+    <h4>Sync across computers</h4>
+    <p>Sign in once on each computer and your projects and ROI sheets stay the same everywhere. Only you can see your data.</p>
+    <input type="email" id="syncEmail" placeholder="Your email" autocomplete="email">
+    <div class="row"><button class="pri" id="syncSend">Email me a sign-in link</button></div>
+    <div class="meta" id="syncSent" hidden>Link sent. Open the email from Supabase and click the link in this browser. It brings you straight back here, signed in.</div>
+  </div>
+  <div id="syncIn" hidden>
+    <h4>Sync is on</h4>
+    <p>Signed in as <b id="syncWho"></b>. Changes save to your account a second or two after you make them, including ROI sheets.</p>
+    <div class="row"><button class="pri" id="syncNow">Sync now</button><button id="syncBackup" hidden>Download replaced copy</button><button id="syncOutBtn">Sign out</button></div>
+    <div class="meta" id="syncWhen"></div>
+  </div>
+  <div class="err" id="syncErr" hidden></div>
+</div>
+
 <div class="wrap">
+  <div class="syncconflict" id="syncConflict" hidden>
+    <span><b>Two different versions.</b> This browser and your synced copy were both changed separately. Pick the one to keep; the other is kept as a download in the Sync menu.</span>
+    <button class="pri" id="syncUseRemote">Use synced copy</button>
+    <button id="syncKeepLocal">Keep this browser's copy</button>
+  </div>
   <div id="paneProjects">
   <div class="tablecard">
     <table>
@@ -485,7 +529,8 @@ function save(){ try{
     state.lastUpdated = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
     const lu=document.getElementById('lastUpdated'); if(lu) lu.textContent=state.lastUpdated;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); flashSaved();
-  }catch(e){} }
+  }catch(e){}
+  if(window.TPSyncChanged) window.TPSyncChanged(); }
 function load(){ try{ const raw=localStorage.getItem(STORAGE_KEY); if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.projects)) return p; } }catch(e){} return null; }
 function flashSaved(){ const c=document.getElementById('saveChip'); c.textContent='Saved'; c.classList.add('on'); clearTimeout(flashSaved._t); flashSaved._t=setTimeout(()=>{c.textContent='Autosave';c.classList.remove('on');},1400); }
 
@@ -607,6 +652,15 @@ function migrate(st){
       }
     });
     st.migrations.push('2026-09-23-llms-ga4'); changed=true;
+  }
+  if(!st.migrations.includes('2026-09-23-mlp-branch')){
+    st.projects.forEach(p=>{
+      if(/^MLP\b.*Landing Page/i.test(p.project||''))
+        addRem(p,'Problem','The live MLP site is published from the branch claude/mandarin-recruitment-site-DK6kf (last built 18 Mar 2026), not main. The June social-handle fix on main is not live - the page still shows @tp_talentcrew. Fix: repo Settings > Pages > Branch: main.',/published from the branch/);
+      if(/^GEO\b.*\(MLP\)/i.test(p.project||''))
+        addRem(p,'To Review','MLP llms.txt was added to both main and the branch that is currently live, so it keeps working when Pages is switched to main.',/both main and the branch/);
+    });
+    st.migrations.push('2026-09-23-mlp-branch'); changed=true;
   }
   return changed;
 }
@@ -1026,6 +1080,7 @@ function bind(){
   document.getElementById('lastUpdated').addEventListener('input', e=>{
     state.lastUpdated=e.target.innerText.trim();
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); flashSaved(); }catch(err){}
+    if(window.TPSyncChanged) window.TPSyncChanged();
   });
 
   document.getElementById('btnAdd').addEventListener('click', ()=>{
@@ -1466,6 +1521,156 @@ function bindImport(){
 }
 
 init();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js" integrity="sha384-xPW3QHswsICVC2mW6BFNwMbhpLkbZ133fKOhxNx3QGGgAOJfL3O9t8r2aWn1aez6" crossorigin="anonymous"></script>
+<script>
+/* ===================== SYNC (Supabase) ===================== */
+(function(){
+  var SB_URL='https://nbmgpmjelgtcaqfitrqt.supabase.co';
+  var SB_KEY='sb_publishable_Kez3zyxlyjxeGE2O2mJNSA_zB05LcQ9';   // publishable key: safe in a public page, data is protected by row-level security
+  var META_KEY='tp_sync_meta_v1', BACKUP_KEY='tp_sync_replaced_copy';
+  var $=function(id){ return document.getElementById(id); };
+  var sb=null, user=null, busy=false, again=false, timer=null, remoteForConflict=null;
+  var meta=readMeta();
+
+  function readMeta(){ try{ var m=JSON.parse(localStorage.getItem(META_KEY)); if(m&&typeof m==='object') return m; }catch(e){} return {rev:0,dirty:true,user:null,roiHash:'',syncedAt:''}; }
+  function writeMeta(){ try{ localStorage.setItem(META_KEY, JSON.stringify(meta)); }catch(e){} }
+  function roiSnapshot(){ var o={}; try{ for(var k=0;k<localStorage.length;k++){ var key=localStorage.key(k); if(key && key.indexOf('tp_roi_')===0) o[key]=localStorage.getItem(key); } }catch(e){} return o; }
+  function hashStr(t){ var h=5381; for(var i=0;i<t.length;i++){ h=((h<<5)+h+t.charCodeAt(i))|0; } return String(h>>>0); }
+  function roiHash(){ var o=roiSnapshot(); return hashStr(JSON.stringify(Object.keys(o).sort().map(function(k){ return [k,o[k]]; }))); }
+  function buildDoc(){ return {v:1, tracker:state, roi:roiSnapshot(), savedAt:new Date().toISOString()}; }
+  function localChanged(){ return !!meta.dirty || roiHash()!==meta.roiHash; }
+
+  function setBtn(kind,label){ var b=$('btnSync'); if(!b) return; b.setAttribute('data-s',kind); $('syncLabel').textContent=label; }
+  function showErr(msg){ var e=$('syncErr'); if(!e) return; e.textContent=msg||''; e.hidden=!msg; }
+  function ago(iso){ if(!iso) return ''; var d=(Date.now()-new Date(iso).getTime())/1000; if(d<60) return 'just now'; if(d<3600) return Math.round(d/60)+' min ago'; if(d<86400) return Math.round(d/3600)+' h ago'; return new Date(iso).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }
+  function refreshPanel(){
+    $('syncOut').hidden=!!user; $('syncIn').hidden=!user;
+    if(user){ $('syncWho').textContent=user.email||''; $('syncWhen').textContent=meta.syncedAt?('Last synced '+ago(meta.syncedAt)):'Not synced yet'; }
+    var hasBackup=false; try{ hasBackup=!!localStorage.getItem(BACKUP_KEY); }catch(e){}
+    $('syncBackup').hidden=!hasBackup;
+  }
+  function status(){
+    if(!sb){ setBtn('warn','Sync unavailable'); return; }
+    if(!user){ setBtn('off','Sync: off'); return; }
+    if(remoteForConflict){ setBtn('warn','Sync: choose version'); return; }
+    if(busy){ setBtn('busy','Syncing'); return; }
+    setBtn(localChanged()?'busy':'ok', localChanged()?'Sync: pending':'Synced');
+  }
+
+  function applyDoc(doc){
+    if(!doc||!doc.tracker||!Array.isArray(doc.tracker.projects)) return false;
+    state=doc.tracker; normalize(state); migrate(state);
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    var roi=doc.roi||{}; Object.keys(roi).forEach(function(k){ if(k.indexOf('tp_roi_')===0){ try{ localStorage.setItem(k, roi[k]); }catch(e){} } });
+    var lu=$('lastUpdated'); if(lu) lu.textContent=state.lastUpdated||'';
+    renderAll(); return true;
+  }
+  function keepBackup(doc){ try{ localStorage.setItem(BACKUP_KEY, JSON.stringify({replacedAt:new Date().toISOString(), doc:doc})); }catch(e){} }
+
+  async function fetchRemote(){
+    var r=await sb.from('tracker_docs').select('data,rev,updated_at').maybeSingle();
+    if(r.error) throw r.error; return r.data;
+  }
+  async function push(){
+    if(!user) return;
+    if(busy){ again=true; return; }
+    busy=true; status(); showErr('');
+    try{
+      var base=(meta.user===user.id)?(meta.rev||0):0;
+      var r=await sb.rpc('save_tracker',{p_data:buildDoc(), p_base_rev:base});
+      if(r.error) throw r.error;
+      var row=Array.isArray(r.data)?r.data[0]:r.data;
+      if(row.out_conflict){
+        decide(await fetchRemote());
+      } else {
+        meta.user=user.id; meta.rev=row.out_rev; meta.syncedAt=row.out_updated_at; meta.dirty=false; meta.roiHash=roiHash(); writeMeta();
+      }
+    }catch(e){ showErr('Could not sync: '+(e.message||e)+'. Your edits are safe in this browser and will sync next time.'); }
+    finally{ busy=false; status(); refreshPanel(); if(again){ again=false; push(); } }
+  }
+  function applyRemote(remote){
+    applyDoc(remote.data);
+    meta.user=user.id; meta.rev=remote.rev; meta.syncedAt=remote.updated_at; meta.dirty=false; meta.roiHash=roiHash(); writeMeta();
+  }
+  /* a browser that only holds the starter data has nothing worth keeping */
+  function isPristine(){
+    try{ var f={lastUpdated:'',projects:JSON.parse(JSON.stringify(SEED))}; normalize(f); migrate(f);
+      return JSON.stringify(f.projects)===JSON.stringify(state.projects) && Object.keys(roiSnapshot()).length===0; }catch(e){ return false; }
+  }
+  /* remote differs from what this browser last synced: take it, or ask */
+  function decide(remote){
+    if(!localChanged() || (!meta.syncedAt && isPristine())){ applyRemote(remote); toast('Loaded your synced projects'); }
+    else { remoteForConflict=remote; $('syncConflict').hidden=false; }
+  }
+  async function pull(){
+    if(!user||busy||remoteForConflict) return;
+    busy=true; status(); showErr('');
+    var needPush=false;
+    try{
+      var remote=await fetchRemote();
+      if(!remote) needPush=true;
+      else if(meta.user===user.id && remote.rev===meta.rev) needPush=localChanged();
+      else decide(remote);
+    }catch(e){ showErr('Could not reach sync: '+(e.message||e)+'. Working offline.'); }
+    finally{ busy=false; status(); refreshPanel(); }
+    if(needPush) push();
+  }
+
+  window.TPSyncChanged=function(){
+    meta.dirty=true; writeMeta(); status();
+    if(!user) return;
+    clearTimeout(timer); timer=setTimeout(push,1500);
+  };
+
+  function bindUi(){
+    $('btnSync').addEventListener('click',function(e){ e.stopPropagation(); var p=$('syncPanel'); p.hidden=!p.hidden; refreshPanel(); if(!p.hidden && !user) setTimeout(function(){ $('syncEmail').focus(); },0); });
+    document.addEventListener('click',function(e){ var p=$('syncPanel'); if(!p.hidden && !p.contains(e.target) && e.target.id!=='btnSync') p.hidden=true; });
+    $('syncSend').addEventListener('click',async function(){
+      var email=($('syncEmail').value||'').trim(); showErr('');
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showErr('Enter a valid email address.'); return; }
+      if(!sb){ showErr('Sync is unavailable right now.'); return; }
+      this.disabled=true;
+      var r=await sb.auth.signInWithOtp({email:email, options:{emailRedirectTo:location.origin+location.pathname}});
+      this.disabled=false;
+      if(r.error){ showErr('Could not send the link: '+r.error.message); return; }
+      $('syncSent').hidden=false;
+    });
+    $('syncEmail').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); $('syncSend').click(); } });
+    $('syncNow').addEventListener('click',function(){ if(localChanged()) push(); else pull(); });
+    $('syncOutBtn').addEventListener('click',async function(){ if(sb) await sb.auth.signOut(); user=null; status(); refreshPanel(); toast('Signed out - edits now stay in this browser only'); });
+    $('syncBackup').addEventListener('click',function(){ try{ downloadFile(localStorage.getItem(BACKUP_KEY),'project-tracker-replaced-copy.json','application/json'); }catch(e){} });
+    $('syncUseRemote').addEventListener('click',function(){
+      if(!remoteForConflict) return; keepBackup(buildDoc());
+      applyRemote(remoteForConflict); remoteForConflict=null; $('syncConflict').hidden=true; status(); refreshPanel(); toast('Using your synced copy');
+    });
+    $('syncKeepLocal').addEventListener('click',function(){
+      if(!remoteForConflict) return; keepBackup(remoteForConflict.data);
+      meta.user=user.id; meta.rev=remoteForConflict.rev; meta.dirty=true; writeMeta();
+      remoteForConflict=null; $('syncConflict').hidden=true; push(); toast('Keeping this browser’s copy');
+    });
+    window.addEventListener('storage',function(e){ if(e.key && e.key.indexOf('tp_roi_')===0) window.TPSyncChanged(); });
+    document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible' && user){ if(localChanged()) push(); else pull(); } });
+  }
+
+  async function start(){
+    bindUi();
+    if(!(window.supabase && window.supabase.createClient)){ status(); return; }
+    try{
+      sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'tp_tracker_auth'}});
+    }catch(e){ sb=null; status(); return; }
+    sb.auth.onAuthStateChange(function(evt,session){
+      var was=user&&user.id; user=session?session.user:null;
+      if(user && user.id!==was){ if(location.hash.indexOf('access_token')>=0){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} } setTimeout(pull,0); }
+      status(); refreshPanel();
+    });
+    var s=await sb.auth.getSession();
+    if(s && s.data && s.data.session && !user){ user=s.data.session.user; pull(); }
+    status(); refreshPanel();
+  }
+  window.TPSync={ pull:pull, push:push, meta:function(){ return meta; } };
+  start();
+})();
 </script>
 </body>
 </html>
