@@ -662,6 +662,28 @@ function migrate(st){
     });
     st.migrations.push('2026-09-23-mlp-branch'); changed=true;
   }
+  if(!st.migrations.includes('2026-09-24-star-awards')){
+    if(!st.projects.some(p=>/STAR Awards/i.test(p.project||''))){
+      const n=st.projects.reduce((m,p)=>Math.max(m,Number(p.n)||0),0)+1;
+      const p={n:n,code:'',project:'H1 STAR Awards - Table & Door Gift System',category:'Talent Engagement',status:'Closed',priority:'Medium',roi:'',
+        stage:'Delivered - used on the event night (4 Sep 2026) for 313 guests across tables 2-32',
+        next:[{text:'Build and deploy guest lookup, floor-plan map and directions',status:'Done'},
+              {text:'Door gift flow on the guest screen with staff-only confirm popup',status:'Done'},
+              {text:'Committee dashboard: live headcount, per-table fill, gift tally, undo',status:'Done'}],
+        owner:'Amr Mihany',poc:'',created:'2026-09-04',deadline:'2026-09-04',
+        notes:'QR code on a printed poster opens a page where each guest enters their BMS ID and gets their table, a floor-plan pin for Level 11 Marjorie 1 and walking directions. Eligible roles (Customer Expert, Supervisor, Support - 271 people) see a door gift panel the gift team confirms. Committee dashboard shows arrivals and gifts live. Built on GitHub + Vercel with Supabase (TP Malaysia project) storing arrivals and gifts.',
+        onepager:'',deck:'',md:'',
+        remarks:[{type:'Final Status',text:'Event delivered 4 Sep 2026. Replaced the manual table-finding and gift-desk queue.'},
+                 {type:'To Review',text:'Can be reused for the next STAR Awards: swap in the new guest list and floor plan.'},
+                 {type:'To Review',text:'Arrivals and gift data sit in the TP Malaysia Supabase project, which is currently paused.'}],
+        links:[{label:'Guest page (QR target)',url:'https://star-awards-tables.vercel.app'},
+               {label:'Committee dashboard',url:'https://star-awards-tables.vercel.app/stats.html'},
+               {label:'GitHub repo (private)',url:'https://github.com/TPMYandTPTH/star-awards-tables'}],
+        tp1:{country:'TPMY',cat:'Talent Engagement',sponsor:'',impact:'',tools:'GitHub, Vercel, Supabase',objectives:'',kickoff:'',commit:'',launch:'4 Sep 2026',closing:'4 Sep 2026'}};
+      normalizeProject(p); st.projects.push(p);
+    }
+    st.migrations.push('2026-09-24-star-awards'); changed=true;
+  }
   return changed;
 }
 
