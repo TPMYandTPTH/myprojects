@@ -319,6 +319,9 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
 
 .tp-footer{background:var(--tp-dark-purple);color:#fff;padding:26px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
 .tp-footer__txt{font-size:12px;opacity:.55}
+.undobtn{background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:7px 12px;cursor:pointer}
+.undobtn:hover{border-color:#fff}
+.undobtn[hidden]{display:none}
 
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--tp-black);color:#fff;padding:13px 22px;font-size:13px;font-weight:600;letter-spacing:.5px;opacity:0;pointer-events:none;transition:all .3s;z-index:2000;box-shadow:0 8px 30px rgba(0,0,0,.3)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -448,6 +451,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
 <footer class="tp-footer">
   <div class="tp-logo-mark">TP</div>
   <span class="tp-footer__txt">TP Project Tracker · click ▶ on a row for links, stage, actions, remarks and notes · edits save automatically to this browser · use Backup to export a copy</span>
+  <button class="undobtn" id="btnUndoUpdate" hidden>Undo automatic update</button>
 </footer>
 
 <div class="tp1modal" id="tp1modal" hidden>
@@ -684,6 +688,50 @@ function migrate(st){
     }
     st.migrations.push('2026-09-24-star-awards'); changed=true;
   }
+  /* Rule for every update from here on: ADD only. Never change a status, stage, date,
+     priority or text you already have, and never remove anything. */
+  if(!st.migrations.includes('2026-09-28-new-work')){
+    const nextN=()=>st.projects.reduce((m,p)=>Math.max(m,Number(p.n)||0),0)+1;
+    const addAct=(p,text,status,re)=>{ if(!(p.next||[]).some(it=>re.test(it.text||''))){ p.next.push({text:text,status:status}); } };
+    const addLink=(p,label,url)=>{ if(!(p.links||[]).some(l=>(l.url||'')===url)){ p.links.push({label:label,url:url}); } };
+    const sanas=st.projects.find(p=>/Sanas/i.test(p.project||''));
+    if(sanas){
+      addAct(sanas,'Prepare agent training: sign-in, first-time setup, softphone audio (Sanas Audio device), pre-shift checks, on-call tips, troubleshooting','In Progress',/agent training/i);
+      addAct(sanas,'Turn the training guide into a TP-branded deck or a one-page agent cheat sheet','To Do',/cheat sheet/i);
+      addLink(sanas,'Sanas help docs','https://help.sanas.ai');
+      addRem(sanas,'To Review','Sanas .msi installer went to Abdah to test on an agent PC - confirm the result.',/Abdah/);
+    }
+    if(!st.projects.some(p=>/Intern/i.test(p.project||'') && /form|hiring/i.test(p.project||''))){
+      const p={n:nextN(),code:'',project:'Intern Hiring - Combined Application Form',category:'Recruiting',status:'In Progress',priority:'Medium',roi:'',
+        stage:'One Google Form for 6 intern roles is built (v3.1) and published; recruiter briefing drafted',
+        next:[{text:'Build the combined form: role picker, knockout questions, per-role branching',status:'Done'},
+              {text:'Send the recruiter briefing and share the responses Sheet with the team',status:'To Do'},
+              {text:'Review the first applications and fix any drop-off in the form',status:'To Do'}],
+        owner:'Amr Mihany',poc:'',created:'2026-09-25',deadline:'',
+        notes:'Roles: AI Intern (GBS Penang 2 HC, G-Tower KL 1 HC), Innovation & Partnerships Intern (G-Tower 1), HR Intern (G-Tower 1), Marketing Intern (G-Tower 1), Data Management Intern (GBS 1). AI and Innovation need 6 months and book an interview; HR, Marketing and Data Management accept 3-6 months and end with an email-your-resume step. Malaysian citizen/PR and minimum duration are knockout questions.',
+        onepager:'',deck:'',md:'',
+        remarks:[{type:'To Review',text:'Rebuild keeps the same published link. Keep NEW_SHEET off after the first run so responses stay in one Sheet.'}],
+        links:[{label:'Application form (public)',url:'https://forms.gle/2yVMUN4SWZyNDhr46'},{label:'Responses Sheet',url:''}],
+        tp1:{country:'TPMY',cat:'Talent Engagement',sponsor:'',impact:'',tools:'Google Forms, Google Sheets, Apps Script, Microsoft Bookings',objectives:'',kickoff:'',commit:'',launch:'',closing:''}};
+      normalizeProject(p); st.projects.push(p);
+    }
+    if(!st.projects.some(p=>/Moka/i.test(p.project||''))){
+      const p={n:nextN(),code:'',project:'Moka Hiring Portal Landing Page',category:'Recruiting',status:'Pending',priority:'Medium',roi:'',
+        stage:'Confirmed the Moka portal builder has a Code embedding module; plan is to host the page ourselves and embed it',
+        next:[{text:'Audit Moka navigation paths and confirm the portal builder options',status:'Done'},
+              {text:'Build the hiring portal landing page on GitHub Pages or Vercel',status:'To Do'},
+              {text:'Embed it in the Moka portal via Code embedding (save PC and mobile layouts separately)',status:'To Do'},
+              {text:'Check whether Moka strips script tags, which would break GA4 on the embedded page',status:'To Do'}],
+        owner:'Amr Mihany',poc:'',created:'2026-09-24',deadline:'',
+        notes:'Hosting the page outside Moka and embedding it by iframe keeps updates and GA4 in one place. Test portal: Test1Amr. Real Moka paths: /jobs, /candidates, /interviews, /talent_pool, /bi-reports, and settings under /settings/... (most paths in the original navigation table were invalid).',
+        onepager:'',deck:'',md:'',
+        remarks:[{type:'To Review',text:'Moka’s own help chatbot said custom HTML is not possible - the Code embedding module shows it is.'}],
+        links:[{label:'Moka portal settings',url:'https://hire-r1.mokahr.com/settings/apply_social'}],
+        tp1:{country:'TPMY',cat:'COS Automation',sponsor:'',impact:'',tools:'Moka, GitHub Pages or Vercel',objectives:'',kickoff:'',commit:'',launch:'',closing:''}};
+      normalizeProject(p); st.projects.push(p);
+    }
+    st.migrations.push('2026-09-28-new-work'); changed=true;
+  }
   return changed;
 }
 
@@ -731,15 +779,40 @@ function applyUi(){
   if(b) b.textContent = ui.statsOpen ? 'Hide summary' : 'Show summary';
 }
 
+const SNAP_KEY='tp_tracker_before_update';
+function undoLastUpdate(){
+  let snap=null; try{ snap=JSON.parse(localStorage.getItem(SNAP_KEY)); }catch(e){}
+  if(!snap||!snap.data) return;
+  const when=new Date(snap.takenAt).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  if(!confirm('Put the tracker back exactly as it was before the automatic update on '+when+'?\n\nAnything you changed after that time is undone too. Download a Backup first if you are not sure.')) return;
+  const keep=(state.migrations||[]).slice();
+  state=JSON.parse(snap.data); normalize(state); state.migrations=keep;
+  try{ localStorage.removeItem(SNAP_KEY); }catch(e){}
+  document.getElementById('lastUpdated').textContent=state.lastUpdated||'';
+  renderAll(); save(); showUndo(); toast('Update undone');
+}
+function showUndo(){
+  let snap=null; try{ snap=JSON.parse(localStorage.getItem(SNAP_KEY)); }catch(e){}
+  const b=document.getElementById('btnUndoUpdate'); if(!b) return;
+  const fresh=snap&&snap.takenAt&&(Date.now()-new Date(snap.takenAt).getTime())<30*864e5;
+  b.hidden=!fresh;
+  if(fresh) b.textContent='Undo automatic update of '+new Date(snap.takenAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+}
+
 function init(){
   loadUi();
   const stored=load();
   state = stored ? stored : { lastUpdated:'', projects: JSON.parse(JSON.stringify(SEED)) };
   normalize(state);
+  const beforeUpdate=stored?JSON.stringify(state):null;
   const migrated=migrate(state);
+  if(migrated && beforeUpdate){
+    try{ localStorage.setItem(SNAP_KEY, JSON.stringify({takenAt:new Date().toISOString(), data:beforeUpdate})); }catch(e){}
+  }
   if(!state.lastUpdated) state.lastUpdated = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   document.getElementById('lastUpdated').textContent = state.lastUpdated;
-  applyUi(); renderAll(); bind(); detectDocs();
+  applyUi(); renderAll(); bind(); detectDocs(); showUndo();
+  document.getElementById('btnUndoUpdate').addEventListener('click',undoLastUpdate);
   if(migrated){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
 }
 function nextNum(){ return state.projects.reduce((m,p)=>Math.max(m,Number(p.n)||0),0)+1; }
