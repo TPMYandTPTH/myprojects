@@ -32,7 +32,7 @@ body{font-family:var(--font-primary);font-size:15px;line-height:1.6;color:var(--
 
 .tp-nav{position:sticky;top:0;z-index:1000;background:var(--tp-deep-purple);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 20px rgba(0,0,0,.15)}
 .tp-nav__left{display:flex;align-items:center;gap:16px}
-.tp-logo-mark{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:#fff;color:var(--tp-deep-purple);font-family:'DM Sans',sans-serif;font-weight:800;font-size:15px;letter-spacing:.5px;flex:none}
+.tp-logo-mark{display:block;width:36px;height:36px;border-radius:8px;background:#fff;padding:3px;box-sizing:border-box;object-fit:contain;flex:none}
 .tp-nav__link{color:rgba(255,255,255,.82);font-size:12.5px;font-weight:600;text-decoration:none;letter-spacing:.3px;padding-left:14px;transition:color .15s}
 .tp-nav__link:hover{color:#fff}
 .tp-nav__title{color:#fff;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:2.5px;padding-left:16px;border-left:1px solid rgba(255,255,255,.25)}
@@ -347,7 +347,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
 
 <nav class="tp-nav">
   <div class="tp-nav__left">
-    <div class="tp-logo-mark">TP</div>
+    <img class="tp-logo-mark" src="TPLogo11.png" alt="TP">
     <span class="tp-nav__title">Project Tracker</span>
     <a class="tp-nav__link" href="./one-pagers/index.html">One-Pagers &#8599;</a>
   </div>
@@ -449,7 +449,7 @@ tr.is-done .col-project .cell-edit{text-decoration:line-through;opacity:.55}
 </div>
 
 <footer class="tp-footer">
-  <div class="tp-logo-mark">TP</div>
+  <img class="tp-logo-mark" src="TPLogo11.png" alt="TP">
   <span class="tp-footer__txt">TP Project Tracker · click ▶ on a row for links, stage, actions, remarks and notes · edits save automatically to this browser · use Backup to export a copy</span>
   <button class="undobtn" id="btnUndoUpdate" hidden>Undo automatic update</button>
 </footer>
@@ -731,6 +731,100 @@ function migrate(st){
       normalizeProject(p); st.projects.push(p);
     }
     st.migrations.push('2026-09-28-new-work'); changed=true;
+  }
+  /* 5 Oct 2026 - ADD only, with one exception the owner asked for: the two LINE bots
+     move from Cancelled to In Progress (only if they are still Cancelled). */
+  if(!st.migrations.includes('2026-10-05-updates')){
+    const nextN=()=>st.projects.reduce((m,p)=>Math.max(m,Number(p.n)||0),0)+1;
+    const find=re=>st.projects.find(p=>re.test(p.project||''));
+    const addAct=(p,text,status,re)=>{ if(!(p.next||[]).some(it=>re.test(it.text||''))){ p.next.push({text:text,status:status}); } };
+    /* LINE screening chatbot revived: Google Apps Script access is now available */
+    [/Malaysia LINE Bot/i,/Thailand LINE Bot/i].forEach(re=>{
+      const p=find(re); if(!p) return;
+      if(p.status==='Cancelled') p.status='In Progress';
+      addAct(p,'Rebuild the LINE screening chatbot on Google Apps Script','To Do',/Google Apps Script/i);
+      addRem(p,'To Review','Revived 5 Oct 2026 - Google Apps Script access is now available, so the LINE screening chatbot restarts. Update TP One to match the new status.',/Revived 5 Oct 2026/);
+    });
+    /* RAF + Agency Trace */
+    const raf=find(/RAF \+ Agency Trace/i);
+    if(raf){
+      addRem(raf,'Problem',"Eko's Power BI result keeps collapsing every time we try to investigate which agency is involved in a hire (5 Oct 2026).",/keeps collapsing/);
+      addAct(raf,"Fix the agency investigation in Eko's Power BI result, which keeps collapsing",'To Do',/keeps collapsing/i);
+    }
+    /* Chatbot Knowledge Base (already tracked as its own row) */
+    const kb=find(/Chatbot Knowledge Base/i);
+    if(kb){
+      addAct(kb,'Pending HR for the row data','Blocked',/pending HR/i);
+      addRem(kb,'To Review','Update 5 Oct 2026: pending HR for the row data.',/pending HR for the row data/i);
+    }
+    /* Sanas */
+    const sanas=find(/Sanas/i);
+    if(sanas){
+      addAct(sanas,'Agent training pack built (1 Oct 2026): 20-slide TP-branded deck as PDF and editable PowerPoint, plus a trainer-only script as standalone HTML, with screenshots from the real app','Done',/20-slide/i);
+    }
+    /* Moka */
+    const moka=find(/Moka/i);
+    if(moka){
+      addRem(moka,'To Review','Link validation done 24 Sep 2026: most paths in the original table were invalid. 97 real Settings pages were mapped from the sidebar. Moka returns an empty page with HTTP 200 for any /settings/... address, so a 200 does not prove a page exists.',/Link validation done/);
+    }
+    /* Intranet */
+    const intranet=find(/Joomla\/YOOtheme/i);
+    if(intranet){
+      addAct(intranet,'Social media channels module rebuilt (Jul 2026): X removed, LINE, TikTok, YouTube and LinkedIn added, grouped Malaysia, Thailand, Global','Done',/Social media channels module/i);
+      addAct(intranet,'Policy & SOP Portal (Jul 2026): Global Travel Policy moved to v.3 and two Global Business Travel Insurance cards added','Done',/Global Travel Policy moved/i);
+    }
+    /* Intern Hiring */
+    const intern=find(/Intern Hiring/i);
+    if(intern){
+      addRem(intern,'To Review','Policy (Sep 2026): only 6-month internships are accepted. The notes saying HR, Marketing and Data Management accept 3-6 months are out of date - check the form text and role list.',/only 6-month internships/);
+      addRem(intern,'To Review','The form and responses Sheet sit on a personal Google account; the tp.com sharing policy blocks moving them. Future forms will be built from the TP email (Oct 2026).',/personal Google account/);
+    }
+    /* New rows */
+    if(!find(/Internal Job Posting/i)){
+      const p={n:nextN(),code:'',project:'Internal Job Posting (IJP) - Intranet Page & Promotion',category:'Recruiting',status:'In Progress',priority:'Medium',roi:'',
+        stage:'Promotion message drafted for TPMY and TPTH (73 open roles); page content review pending',
+        next:[{text:'Draft the internal promotion message with step-by-step access instructions (Island browser)',status:'Done'},
+              {text:'Fill in the eligibility criteria placeholders: minimum tenure, performance standing, disciplinary status',status:'To Do'},
+              {text:'Check how TPTH staff see the intranet label - it may not read TPMY Intranet',status:'To Do'},
+              {text:'Review and refresh the Internal Job Postings page content with Thida Aung (not updated since early 2026)',status:'To Do'},
+              {text:'Short WhatsApp/LINE version and Thai translation of the message',status:'To Do'}],
+        owner:'Amr Mihany',poc:'Thida Aung',created:'2026-07-17',deadline:'',
+        notes:'Internal Job Postings page on the TPMY intranet (Employee Center). It ranks in the top five most visited intranet pages but has not been updated since early 2026. Access path: Island browser > map logo > TPMY Intranet > Employee Center > Internal Job Postings. The link only works inside Island browser.',
+        onepager:'',deck:'',md:'',
+        remarks:[{type:'To Review',text:'Created date is an estimate (first reminder to Thida Aung, 17 Jul 2026) - confirm.'}],
+        links:[{label:'Internal Job Postings page (Island browser only)',url:'https://tip-apacmlh.tpapac.com/Intranet/index.php/employee-center/internal-job-postings'}],
+        tp1:{country:'TPMY + TPTH',cat:'COS Automation',sponsor:'',impact:'',tools:'Joomla, YOOtheme',objectives:'',kickoff:'',commit:'',launch:'',closing:''}};
+      normalizeProject(p); st.projects.push(p);
+    }
+    if(!find(/WhatsApp Channel/i)){
+      const p={n:nextN(),code:'',project:'Careers at TPMY - WhatsApp Channel',category:'Recruiting',status:'Pending',priority:'Medium',roi:'',
+        stage:'Proposal - meeting requested to agree how the channel is used to promote jobs',
+        next:[{text:'Hold the meeting to agree how jobs are posted on the channel',status:'To Do'},
+              {text:'Define the post format and cadence, modelled on the TP Indonesia Shine Careers channel',status:'To Do'}],
+        owner:'Amr Mihany',poc:'',created:'2026-09-10',deadline:'',
+        notes:'TPMY already has a Careers at TPMY WhatsApp Channel but it has not been used well. Proposal: use it to promote jobs the way LinkedIn is used. TP Indonesia\'s Shine Careers channel is the example to follow.',
+        onepager:'',deck:'',md:'',
+        remarks:[],
+        links:[{label:'Careers at TPMY channel',url:'https://whatsapp.com/channel/0029Vb6TlOaDTkK1W3oGeb1c'},
+               {label:'TP Indonesia Shine Careers (example)',url:'https://whatsapp.com/channel/0029VbAvYf0HQbRvD7dV7R2q'}],
+        tp1:{country:'TPMY',cat:'COS Automation',sponsor:'',impact:'',tools:'WhatsApp Channels',objectives:'',kickoff:'',commit:'',launch:'',closing:''}};
+      normalizeProject(p); st.projects.push(p);
+    }
+    if(!find(/Project Tracker/i)){
+      const p={n:nextN(),code:'',project:'Project Tracker Dashboard',category:'Chief of Staff',status:'Live',priority:'Medium',roi:'',
+        stage:'Live on GitHub Pages - Projects table with links, filters, TP One export, Excel import and Backup',
+        next:[{text:'Build the tracker: Projects table, filters, TP One export, Excel import, Backup and Restore',status:'Done'},
+              {text:'Keep rows current and log new projects in TP One',status:'To Do'}],
+        owner:'Amr Mihany',poc:'',created:'2026-09-14',deadline:'',
+        notes:'Self-contained HTML tracker for my own project portfolio, built to make updating TP One easier. Data is saved in the browser, so use Backup to keep a copy.',
+        onepager:'',deck:'',md:'',
+        remarks:[{type:'To Review',text:'Created date is an estimate - confirm.'}],
+        links:[{label:'Live tracker',url:'https://tpmyandtpth.github.io/myprojects/index.html'},
+               {label:'GitHub repo',url:'https://github.com/TPMYandTPTH/myprojects'}],
+        tp1:{country:'TPMY',cat:'COS Automation',sponsor:'',impact:'',tools:'HTML, GitHub Pages',objectives:'',kickoff:'',commit:'',launch:'',closing:''}};
+      normalizeProject(p); st.projects.push(p);
+    }
+    st.migrations.push('2026-10-05-updates'); changed=true;
   }
   return changed;
 }
